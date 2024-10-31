@@ -160,7 +160,6 @@ proxy-groups:
   - name: openAI
     type: select
     proxies:
-      - ChatGPT & AI 专线 
       - 🔰 节点选择
       - ♻️ 自动选择 
   
