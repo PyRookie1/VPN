@@ -82,7 +82,7 @@ bypass:
 proxy-providers:
   ✈️ 我的机场:
     type: http
-    url: "https://https://feed.iggv5.com/c/be0a15ad-bc7d-4dbf-b58e-2e91583dcaba/platform/clash/iGG-iGuge"
+    url: "https://feed.iggv5.com/c/be0a15ad-bc7d-4dbf-b58e-2e91583dcaba/platform/clash/iGG-iGuge"
     interval: 86400
     path: ./wodejichang.yaml
     health-check:
