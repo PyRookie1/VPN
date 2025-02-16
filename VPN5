@@ -1,4 +1,4 @@
-allow-lan: false
+5allow-lan: false
 bind-address: 127.0.0.1
 dns:
   fake-ip-range: 198.18.0.1/16
