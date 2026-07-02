@@ -67,7 +67,7 @@ proxy-groups:
     use:
       - ✈️ 我的机场
 
-  - name: ChatGPT
+  - name: 👽 ChatGPT
     type: url-test
     use:
       - ✈️ 我的机场
@@ -100,7 +100,7 @@ proxy-groups:
     timeout: 5000
     lazy: true
 
-  - name: openAI
+  - name: 🐬 openAI
     type: select
     proxies:
       - ChatGPT
