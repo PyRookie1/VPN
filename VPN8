@@ -100,7 +100,7 @@ proxy-groups:
     timeout: 5000
     lazy: true
 
-  - name: 👽 openAI
+  - name: openAI
     type: select
     proxies:
       - ChatGPT
