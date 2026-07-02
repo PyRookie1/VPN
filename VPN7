@@ -95,7 +95,6 @@ proxy-groups:
     type: select
     proxies:
       - ♻️ 自动选择
-      - 🇭🇰 香港节点
       - 🎯 本地直连
     use:
       - ✈️ 我的机场
@@ -105,16 +104,6 @@ proxy-groups:
     url: https://cp.cloudflare.com/generate_204
     interval: 300
     tolerance: 50
-    exclude-filter: "(?i)(香港|港|hk|hongkong|hong kong|hkg)"
-    use:
-      - ✈️ 我的机场
-
-  - name: 🇭🇰 香港节点
-    type: url-test
-    url: https://cp.cloudflare.com/generate_204
-    interval: 300
-    tolerance: 50
-    filter: "(?i)(香港|港|hk|hongkong|hong kong|hkg)"
     use:
       - ✈️ 我的机场
 
