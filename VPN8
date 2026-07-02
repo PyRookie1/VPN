@@ -67,7 +67,7 @@ proxy-groups:
     use:
       - ✈️ 我的机场
 
-  - name: 👽 ChatGPT
+  - name: ChatGPT
     type: url-test
     use:
       - ✈️ 我的机场
