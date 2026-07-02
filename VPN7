@@ -94,6 +94,7 @@ proxy-groups:
   - name: 🔰 节点选择
     type: select
     proxies:
+      - ♻️ 自动选择
       - 🎯 本地直连
     use:
       - ✈️ 我的机场
