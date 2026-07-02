@@ -4,8 +4,7 @@ mixed-port: 7890
 mode: Rule
 log-level: info
 
-external-controller: 127.0.0.1:9090
-secret: "584521"
+external-controller: :9090
 
 unified-delay: true
 tcp-concurrent: true
