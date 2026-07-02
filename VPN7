@@ -105,7 +105,7 @@ proxy-groups:
     url: https://cp.cloudflare.com/generate_204
     interval: 300
     tolerance: 50
-    exclude-filter: "(?i)(香港|港|hk|hongkong|hong kong|hkg)"
+    filter: "(?i)(日本|日|jp|japan|tokyo|osaka|东京|大阪|jpn)"
     use:
       - ✈️ 我的机场
 
