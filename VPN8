@@ -88,7 +88,7 @@ proxy-groups:
     interval: 300
     tolerance: 50
     timeout: 5000
-    lazy: true
+    lazy: false
 
   - name: ⚖️ 负载均衡
     type: load-balance
@@ -104,8 +104,6 @@ proxy-groups:
     type: select
     proxies:
       - ChatGPT
-      - 🔰 节点选择
-      - ♻️ 自动选择
 
   - name: 🌍 国外媒体
     type: select
