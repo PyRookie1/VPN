@@ -93,10 +93,6 @@ proxy-providers:
 proxy-groups:
   - name: 🔰 节点选择
     type: select
-    proxies:
-      - ♻️ 自动选择
-      - 🇭🇰 香港节点
-      - 🎯 本地直连
     use:
       - ✈️ 我的机场
  
