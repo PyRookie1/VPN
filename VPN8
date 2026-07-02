@@ -4,7 +4,7 @@ mixed-port: 7890
 mode: Rule
 log-level: info
 
-external-controller: :9090
+external-controller: 9090
 
 unified-delay: true
 tcp-concurrent: true
@@ -48,7 +48,7 @@ dns:
 proxy-providers:
   ✈️ 我的机场:
     type: http
-    url: "https://feed.iggv5.com/c/76c8d23a-f597-4f5a-a0c0-3bf2ccd93344/platform/clash/iGG-iGuge"
+    url: "请替换为重置后的新订阅地址"
     interval: 3600
     path: ./wodejichang.yaml
     health-check:
@@ -88,7 +88,7 @@ proxy-groups:
     interval: 300
     tolerance: 50
     timeout: 5000
-    lazy: false
+    lazy: true
 
   - name: ⚖️ 负载均衡
     type: load-balance
@@ -104,6 +104,8 @@ proxy-groups:
     type: select
     proxies:
       - ChatGPT
+      - 🔰 节点选择
+      - ♻️ 自动选择
 
   - name: 🌍 国外媒体
     type: select
