@@ -103,7 +103,7 @@ proxy-groups:
   - name: 🐬 openAI
     type: select
     proxies:
-      - ChatGPT
+      - 👽 ChatGPT
       - 🔰 节点选择
       - ♻️ 自动选择
 
@@ -180,29 +180,29 @@ rules:
   - IP-CIDR6,fd00::/8,🎯 本地直连,no-resolve
 
   # ChatGPT / OpenAI
-  - DOMAIN-SUFFIX,chatgpt.com,ChatGPT
-  - DOMAIN-SUFFIX,openai.com,ChatGPT
-  - DOMAIN-SUFFIX,oaistatic.com,ChatGPT
-  - DOMAIN-SUFFIX,oaiusercontent.com,ChatGPT
-  - DOMAIN-SUFFIX,oaistatsig.com,ChatGPT
-  - DOMAIN-SUFFIX,openaimerge.com,ChatGPT
-  - DOMAIN-SUFFIX,workos.com,ChatGPT
-  - DOMAIN-SUFFIX,workoscdn.com,ChatGPT
-  - DOMAIN-SUFFIX,intercom.io,ChatGPT
-  - DOMAIN-SUFFIX,intercomcdn.com,ChatGPT
-  - DOMAIN-SUFFIX,ct.sendgrid.net,ChatGPT
-  - DOMAIN,challenges.cloudflare.com,ChatGPT
-  - DOMAIN,o207216.ingest.sentry.io,ChatGPT
-  - DOMAIN,o33249.ingest.sentry.io,ChatGPT
-  - DOMAIN,rum.browser-intake-datadoghq.com,ChatGPT
-  - DOMAIN,js.stripe.com,ChatGPT
+  - DOMAIN-SUFFIX,chatgpt.com,👽 ChatGPT
+  - DOMAIN-SUFFIX,openai.com,👽 ChatGPT
+  - DOMAIN-SUFFIX,oaistatic.com,👽 ChatGPT
+  - DOMAIN-SUFFIX,oaiusercontent.com,👽 ChatGPT
+  - DOMAIN-SUFFIX,oaistatsig.com,👽 ChatGPT
+  - DOMAIN-SUFFIX,openaimerge.com,👽 ChatGPT
+  - DOMAIN-SUFFIX,workos.com,👽 ChatGPT
+  - DOMAIN-SUFFIX,workoscdn.com,👽 ChatGPT
+  - DOMAIN-SUFFIX,intercom.io,👽 ChatGPT
+  - DOMAIN-SUFFIX,intercomcdn.com,👽 ChatGPT
+  - DOMAIN-SUFFIX,ct.sendgrid.net,👽 ChatGPT
+  - DOMAIN,challenges.cloudflare.com,👽 ChatGPT
+  - DOMAIN,o207216.ingest.sentry.io,👽 ChatGPT
+  - DOMAIN,o33249.ingest.sentry.io,👽 ChatGPT
+  - DOMAIN,rum.browser-intake-datadoghq.com,👽 ChatGPT
+  - DOMAIN,js.stripe.com,👽 ChatGPT
 
   # 其他 AI 服务
-  - DOMAIN-SUFFIX,claude.ai,openAI
-  - DOMAIN-SUFFIX,anthropic.com,openAI
-  - DOMAIN-SUFFIX,bard.google.com,openAI
-  - DOMAIN-SUFFIX,gemini.googleapis.com,openAI
-  - DOMAIN-SUFFIX,aida.googleapis.com,openAI
+  - DOMAIN-SUFFIX,claude.ai,🐬 openAI
+  - DOMAIN-SUFFIX,anthropic.com,🐬 openAI
+  - DOMAIN-SUFFIX,bard.google.com,🐬 openAI
+  - DOMAIN-SUFFIX,gemini.googleapis.com,🐬 openAI
+  - DOMAIN-SUFFIX,aida.googleapis.com,🐬 openAI
 
   # Telegram
   - DOMAIN-SUFFIX,t.me,📲 电报信息
