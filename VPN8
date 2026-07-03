@@ -48,7 +48,7 @@ dns:
 proxy-providers:
   ✈️ 我的机场:
     type: http
-    url: "请替换为重置后的新订阅地址"
+    url: "https://feed.iggv5.com/c/76c8d23a-f597-4f5a-a0c0-3bf2ccd93344/platform/clash/iGG-iGuge"
     interval: 3600
     path: ./wodejichang.yaml
     health-check:
