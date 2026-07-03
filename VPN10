@@ -1,0 +1,505 @@
+allow-lan: false
+bind-address: 127.0.0.1
+mixed-port: 7890
+mode: rule
+log-level: info
+
+external-controller: 9090
+
+ipv6: false
+unified-delay: true
+tcp-concurrent: true
+
+profile:
+  store-selected: true
+  store-fake-ip: true
+
+dns:
+  enable: true
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  use-hosts: true
+  use-system-hosts: true
+
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+    - 180.76.76.76
+
+  proxy-server-nameserver:
+    - https://223.5.5.5/dns-query
+    - https://223.6.6.6/dns-query
+    - https://doh.pub/dns-query
+
+  nameserver:
+    - https://223.5.5.5/dns-query
+    - https://223.6.6.6/dns-query
+    - https://doh.pub/dns-query
+
+  fallback:
+    - https://1.1.1.1/dns-query#🔰 节点选择
+    - https://8.8.8.8/dns-query#🔰 节点选择
+
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+
+  fake-ip-filter:
+    - "*.lan"
+    - "*.local"
+    - "localhost"
+    - "+.msftconnecttest.com"
+    - "+.msftncsi.com"
+    - "time.*.com"
+    - "time.*.gov"
+    - "time.*.edu.cn"
+    - "ntp.*.com"
+    - "time1.cloud.tencent.com"
+
+proxy-providers:
+  ✈️ 我的机场:
+    type: http
+    url: "https://feed.iggv5.com/c/76c8d23a-f597-4f5a-a0c0-3bf2ccd93344/platform/clash/iGG-iGuge"
+    interval: 3600
+    path: ./wodejichang.yaml
+    health-check:
+      enable: true
+      interval: 300
+      timeout: 5000
+      url: https://cp.cloudflare.com/generate_204
+      expected-status: 204
+
+proxy-groups:
+  - name: 🔰 节点选择
+    type: select
+    proxies:
+      - ♻️ 自动选择
+      - ⚖️ 负载均衡
+      - 🎯 本地直连
+    use:
+      - ✈️ 我的机场
+
+  - name: 👽 ChatGPT
+    type: url-test
+    use:
+      - ✈️ 我的机场
+    url: https://chatgpt.com/cdn-cgi/trace
+    interval: 300
+    tolerance: 50
+    timeout: 5000
+    max-failed-times: 3
+    lazy: false
+    expected-status: 200
+    exclude-filter: '(?i)(🇭🇰|香港|港|\bHK\b|Hong\s*Kong|HKG)'
+
+  - name: ♻️ 自动选择
+    type: url-test
+    use:
+      - ✈️ 我的机场
+    url: https://cp.cloudflare.com/generate_204
+    interval: 300
+    tolerance: 50
+    timeout: 5000
+    expected-status: 204
+    lazy: true
+
+  - name: ⚖️ 负载均衡
+    type: load-balance
+    strategy: consistent-hashing
+    use:
+      - ✈️ 我的机场
+    url: https://cp.cloudflare.com/generate_204
+    interval: 300
+    timeout: 5000
+    expected-status: 204
+    lazy: true
+
+  - name: 🤖 AI服务
+    type: select
+    proxies:
+      - 👽 ChatGPT
+      - 🔰 节点选择
+      - ♻️ 自动选择
+
+  - name: 🌍 国外媒体
+    type: select
+    proxies:
+      - 🔰 节点选择
+      - ♻️ 自动选择
+      - ⚖️ 负载均衡
+      - 🎯 本地直连
+    use:
+      - ✈️ 我的机场
+
+  - name: 🌏 国内媒体
+    type: select
+    proxies:
+      - 🎯 本地直连
+      - 🔰 节点选择
+
+  - name: Ⓜ️ 微软服务
+    type: select
+    proxies:
+      - 🎯 本地直连
+      - 🔰 节点选择
+      - ♻️ 自动选择
+
+  - name: 📲 电报信息
+    type: select
+    proxies:
+      - 🔰 节点选择
+      - ♻️ 自动选择
+      - 🎯 本地直连
+    use:
+      - ✈️ 我的机场
+
+  - name: 🍎 苹果服务
+    type: select
+    proxies:
+      - 🎯 本地直连
+      - 🔰 节点选择
+      - ♻️ 自动选择
+
+  - name: SteamGame
+    type: select
+    proxies:
+      - 🎯 本地直连
+      - 🔰 节点选择
+      - ♻️ 自动选择
+
+  - name: 🎯 本地直连
+    type: select
+    proxies:
+      - DIRECT
+
+  - name: 🐟 漏网之鱼
+    type: select
+    proxies:
+      - 🔰 节点选择
+      - ♻️ 自动选择
+      - ⚖️ 负载均衡
+      - 🎯 本地直连
+
+rules:
+  # 局域网 / 本机
+  - DOMAIN-SUFFIX,local,🎯 本地直连
+  - IP-CIDR,127.0.0.0/8,🎯 本地直连,no-resolve
+  - IP-CIDR,10.0.0.0/8,🎯 本地直连,no-resolve
+  - IP-CIDR,172.16.0.0/12,🎯 本地直连,no-resolve
+  - IP-CIDR,192.168.0.0/16,🎯 本地直连,no-resolve
+  - IP-CIDR,100.64.0.0/10,🎯 本地直连,no-resolve
+  - IP-CIDR6,::1/128,🎯 本地直连,no-resolve
+  - IP-CIDR6,fc00::/7,🎯 本地直连,no-resolve
+  - IP-CIDR6,fe80::/10,🎯 本地直连,no-resolve
+  - IP-CIDR6,fd00::/8,🎯 本地直连,no-resolve
+
+  # ChatGPT / OpenAI
+  - DOMAIN-SUFFIX,chatgpt.com,👽 ChatGPT
+  - DOMAIN-SUFFIX,openai.com,👽 ChatGPT
+  - DOMAIN-SUFFIX,oaistatic.com,👽 ChatGPT
+  - DOMAIN-SUFFIX,oaiusercontent.com,👽 ChatGPT
+  - DOMAIN-SUFFIX,oaistatsig.com,👽 ChatGPT
+  - DOMAIN-SUFFIX,openaimerge.com,👽 ChatGPT
+  - DOMAIN-SUFFIX,workos.com,👽 ChatGPT
+  - DOMAIN-SUFFIX,workoscdn.com,👽 ChatGPT
+  - DOMAIN-SUFFIX,intercom.io,👽 ChatGPT
+  - DOMAIN-SUFFIX,intercomcdn.com,👽 ChatGPT
+  - DOMAIN-SUFFIX,ct.sendgrid.net,👽 ChatGPT
+  - DOMAIN,challenges.cloudflare.com,👽 ChatGPT
+  - DOMAIN,o207216.ingest.sentry.io,👽 ChatGPT
+  - DOMAIN,o33249.ingest.sentry.io,👽 ChatGPT
+  - DOMAIN,rum.browser-intake-datadoghq.com,👽 ChatGPT
+  - DOMAIN,js.stripe.com,👽 ChatGPT
+
+  # 其他 AI 服务
+  - DOMAIN-SUFFIX,claude.ai,🤖 AI服务
+  - DOMAIN-SUFFIX,anthropic.com,🤖 AI服务
+  - DOMAIN-SUFFIX,bard.google.com,🤖 AI服务
+  - DOMAIN-SUFFIX,gemini.googleapis.com,🤖 AI服务
+  - DOMAIN-SUFFIX,aida.googleapis.com,🤖 AI服务
+
+  # Telegram
+  - DOMAIN-SUFFIX,t.me,📲 电报信息
+  - DOMAIN-SUFFIX,tdesktop.com,📲 电报信息
+  - DOMAIN-SUFFIX,telegra.ph,📲 电报信息
+  - DOMAIN-SUFFIX,telegram.me,📲 电报信息
+  - DOMAIN-SUFFIX,telegram.org,📲 电报信息
+  - DOMAIN-SUFFIX,telesco.pe,📲 电报信息
+  - IP-CIDR,91.108.4.0/22,📲 电报信息,no-resolve
+  - IP-CIDR,91.108.8.0/22,📲 电报信息,no-resolve
+  - IP-CIDR,91.108.12.0/22,📲 电报信息,no-resolve
+  - IP-CIDR,91.108.16.0/22,📲 电报信息,no-resolve
+  - IP-CIDR,91.108.56.0/22,📲 电报信息,no-resolve
+  - IP-CIDR,149.154.160.0/20,📲 电报信息,no-resolve
+  - IP-CIDR6,2001:b28:f23d::/48,📲 电报信息,no-resolve
+  - IP-CIDR6,2001:b28:f23f::/48,📲 电报信息,no-resolve
+  - IP-CIDR6,2001:67c:4e8::/48,📲 电报信息,no-resolve
+
+  # Microsoft
+  - DOMAIN-KEYWORD,1drv,Ⓜ️ 微软服务
+  - DOMAIN-KEYWORD,microsoft,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,live.com,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,live.net,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,msn.com,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,outlook.com,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,hotmail.com,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,office.com,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,office.net,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,office365.com,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,onedrive.com,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,sharepoint.com,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,sharepointonline.com,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,windows.com,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,windows.net,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,windowsupdate.com,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,xboxlive.com,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,xboxservices.com,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,azure.com,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,azure.net,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,azureedge.net,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,msedge.net,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,msftauth.net,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,msftidentity.com,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,msauth.net,Ⓜ️ 微软服务
+  - DOMAIN-SUFFIX,aka.ms,Ⓜ️ 微软服务
+
+  # Apple
+  - DOMAIN-SUFFIX,aaplimg.com,🍎 苹果服务
+  - DOMAIN-SUFFIX,apple.co,🍎 苹果服务
+  - DOMAIN-SUFFIX,apple.com,🍎 苹果服务
+  - DOMAIN-SUFFIX,apple.com.cn,🍎 苹果服务
+  - DOMAIN-SUFFIX,apple-cloudkit.com,🍎 苹果服务
+  - DOMAIN-SUFFIX,appstore.com,🍎 苹果服务
+  - DOMAIN-SUFFIX,cdn-apple.com,🍎 苹果服务
+  - DOMAIN-SUFFIX,icloud.com,🍎 苹果服务
+  - DOMAIN-SUFFIX,icloud.com.cn,🍎 苹果服务
+  - DOMAIN-SUFFIX,icloud-content.com,🍎 苹果服务
+  - DOMAIN-SUFFIX,me.com,🍎 苹果服务
+  - DOMAIN-SUFFIX,mzstatic.com,🍎 苹果服务
+
+  # 国外媒体
+  - DOMAIN-SUFFIX,youtube.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,youtu.be,🌍 国外媒体
+  - DOMAIN-SUFFIX,ytimg.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,googlevideo.com,🌍 国外媒体
+  - DOMAIN,youtubei.googleapis.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,netflix.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,netflix.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,nflxvideo.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,nflximg.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,nflximg.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,disneyplus.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,disney-plus.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,dssott.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,hulu.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,huluim.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,hulustream.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,primevideo.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,amazonvideo.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,bamgrid.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,hbo.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,hbogo.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,hbonow.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,spotify.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,spotifycdn.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,scdn.co,🌍 国外媒体
+  - DOMAIN-SUFFIX,pscdn.co,🌍 国外媒体
+  - DOMAIN-SUFFIX,twitch.tv,🌍 国外媒体
+  - DOMAIN-SUFFIX,twitchcdn.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,ttvnw.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,discord.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,discordapp.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,discordapp.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,bahamut.com.tw,🌍 国外媒体
+  - DOMAIN-SUFFIX,gamer.com.tw,🌍 国外媒体
+  - DOMAIN-SUFFIX,abema.tv,🌍 国外媒体
+  - DOMAIN-SUFFIX,abema.io,🌍 国外媒体
+  - DOMAIN-SUFFIX,nicovideo.jp,🌍 国外媒体
+  - DOMAIN-SUFFIX,nimg.jp,🌍 国外媒体
+
+  # 国内媒体
+  - DOMAIN-SUFFIX,acg.tv,🌏 国内媒体
+  - DOMAIN-SUFFIX,acgvideo.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,b23.tv,🌏 国内媒体
+  - DOMAIN-SUFFIX,biliapi.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,biliapi.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,bilibili.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,biligame.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,biligame.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,bilivideo.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,hdslb.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,iqiyi.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,iqiyipic.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,qy.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,iq.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,v.qq.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,video.qq.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,wetv.vip,🌏 国内媒体
+  - DOMAIN-SUFFIX,youku.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,ykimg.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,mgtv.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,hitv.com,🌏 国内媒体
+
+  # Steam
+  - DOMAIN,api.steampowered.com,SteamGame
+  - DOMAIN,store.steampowered.com,SteamGame
+  - DOMAIN-SUFFIX,steampowered.com,SteamGame
+  - DOMAIN-SUFFIX,steamcommunity.com,SteamGame
+  - DOMAIN-SUFFIX,steamserver.net,SteamGame
+  - DOMAIN-SUFFIX,steam-chat.com,SteamGame
+  - DOMAIN-SUFFIX,steamgames.com,SteamGame
+  - DOMAIN-SUFFIX,steamusercontent.com,SteamGame
+  - DOMAIN-SUFFIX,steamcontent.com,SteamGame
+  - DOMAIN-SUFFIX,steamstatic.com,SteamGame
+  - DOMAIN-SUFFIX,steamcdn-a.akamaihd.net,SteamGame
+  - DOMAIN-SUFFIX,steamstat.us,SteamGame
+
+  # 常见需要代理的服务
+  - DOMAIN-KEYWORD,google,🔰 节点选择
+  - DOMAIN-KEYWORD,blogspot,🔰 节点选择
+  - DOMAIN-KEYWORD,github,🔰 节点选择
+  - DOMAIN-KEYWORD,twitter,🔰 节点选择
+  - DOMAIN-KEYWORD,facebook,🔰 节点选择
+  - DOMAIN-KEYWORD,pinterest,🔰 节点选择
+  - DOMAIN-SUFFIX,google.com,🔰 节点选择
+  - DOMAIN-SUFFIX,googleapis.com,🔰 节点选择
+  - DOMAIN-SUFFIX,gstatic.com,🔰 节点选择
+  - DOMAIN-SUFFIX,gmail.com,🔰 节点选择
+  - DOMAIN-SUFFIX,googleusercontent.com,🔰 节点选择
+  - DOMAIN-SUFFIX,googleapis.cn,🔰 节点选择
+  - DOMAIN-SUFFIX,recaptcha.net,🔰 节点选择
+  - DOMAIN-SUFFIX,gvt0.com,🔰 节点选择
+  - DOMAIN-SUFFIX,gvt1.com,🔰 节点选择
+  - DOMAIN-SUFFIX,gvt2.com,🔰 节点选择
+  - DOMAIN-SUFFIX,gvt3.com,🔰 节点选择
+  - DOMAIN-SUFFIX,github.com,🔰 节点选择
+  - DOMAIN-SUFFIX,githubassets.com,🔰 节点选择
+  - DOMAIN-SUFFIX,githubusercontent.com,🔰 节点选择
+  - DOMAIN-SUFFIX,github.io,🔰 节点选择
+  - DOMAIN-SUFFIX,x.com,🔰 节点选择
+  - DOMAIN-SUFFIX,twitter.com,🔰 节点选择
+  - DOMAIN-SUFFIX,twimg.com,🔰 节点选择
+  - DOMAIN-SUFFIX,t.co,🔰 节点选择
+  - DOMAIN-SUFFIX,facebook.com,🔰 节点选择
+  - DOMAIN-SUFFIX,fb.com,🔰 节点选择
+  - DOMAIN-SUFFIX,fbcdn.net,🔰 节点选择
+  - DOMAIN-SUFFIX,instagram.com,🔰 节点选择
+  - DOMAIN-SUFFIX,cdninstagram.com,🔰 节点选择
+  - DOMAIN-SUFFIX,whatsapp.com,🔰 节点选择
+  - DOMAIN-SUFFIX,whatsapp.net,🔰 节点选择
+  - DOMAIN-SUFFIX,reddit.com,🔰 节点选择
+  - DOMAIN-SUFFIX,redditmedia.com,🔰 节点选择
+  - DOMAIN-SUFFIX,redditstatic.com,🔰 节点选择
+  - DOMAIN-SUFFIX,wikipedia.org,🔰 节点选择
+  - DOMAIN-SUFFIX,wikimedia.org,🔰 节点选择
+  - DOMAIN-SUFFIX,medium.com,🔰 节点选择
+  - DOMAIN-SUFFIX,quora.com,🔰 节点选择
+  - DOMAIN-SUFFIX,archive.org,🔰 节点选择
+  - DOMAIN-SUFFIX,archive.is,🔰 节点选择
+  - DOMAIN-SUFFIX,cloudfront.net,🔰 节点选择
+  - DOMAIN-SUFFIX,amazonaws.com,🔰 节点选择
+  - DOMAIN-SUFFIX,dropbox.com,🔰 节点选择
+  - DOMAIN-SUFFIX,dropboxusercontent.com,🔰 节点选择
+  - DOMAIN-SUFFIX,mega.nz,🔰 节点选择
+  - DOMAIN-SUFFIX,box.com,🔰 节点选择
+  - DOMAIN-SUFFIX,zoom.us,🔰 节点选择
+  - DOMAIN-SUFFIX,signal.org,🔰 节点选择
+  - DOMAIN-SUFFIX,line.me,🔰 节点选择
+  - DOMAIN-SUFFIX,line-apps.com,🔰 节点选择
+  - DOMAIN-SUFFIX,line-scdn.net,🔰 节点选择
+  - DOMAIN-SUFFIX,naver.com,🔰 节点选择
+  - DOMAIN-SUFFIX,kakao.com,🔰 节点选择
+  - DOMAIN-SUFFIX,pixiv.net,🔰 节点选择
+
+  # 国内常见服务直连
+  - DOMAIN-SUFFIX,cn,🎯 本地直连
+  - DOMAIN-SUFFIX,baidu.com,🎯 本地直连
+  - DOMAIN-SUFFIX,bdstatic.com,🎯 本地直连
+  - DOMAIN-SUFFIX,qq.com,🎯 本地直连
+  - DOMAIN-SUFFIX,tencent.com,🎯 本地直连
+  - DOMAIN-SUFFIX,wechat.com,🎯 本地直连
+  - DOMAIN-SUFFIX,weixin.qq.com,🎯 本地直连
+  - DOMAIN-SUFFIX,gtimg.com,🎯 本地直连
+  - DOMAIN-SUFFIX,alicdn.com,🎯 本地直连
+  - DOMAIN-SUFFIX,alibaba.com,🎯 本地直连
+  - DOMAIN-SUFFIX,taobao.com,🎯 本地直连
+  - DOMAIN-SUFFIX,tmall.com,🎯 本地直连
+  - DOMAIN-SUFFIX,jd.com,🎯 本地直连
+  - DOMAIN-SUFFIX,360buyimg.com,🎯 本地直连
+  - DOMAIN-SUFFIX,163.com,🎯 本地直连
+  - DOMAIN-SUFFIX,126.net,🎯 本地直连
+  - DOMAIN-SUFFIX,netease.com,🎯 本地直连
+  - DOMAIN-SUFFIX,weibo.com,🎯 本地直连
+  - DOMAIN-SUFFIX,weibocdn.com,🎯 本地直连
+  - DOMAIN-SUFFIX,zhihu.com,🎯 本地直连
+  - DOMAIN-SUFFIX,zhimg.com,🎯 本地直连
+  - DOMAIN-SUFFIX,douban.com,🎯 本地直连
+  - DOMAIN-SUFFIX,doubanio.com,🎯 本地直连
+  - DOMAIN-SUFFIX,xiaomi.com,🎯 本地直连
+  - DOMAIN-SUFFIX,mi.com,🎯 本地直连
+  - DOMAIN-SUFFIX,hicloud.com,🎯 本地直连
+  - DOMAIN-SUFFIX,huawei.com,🎯 本地直连
+  - DOMAIN-SUFFIX,meituan.com,🎯 本地直连
+  - DOMAIN-SUFFIX,meituan.net,🎯 本地直连
+  - DOMAIN-SUFFIX,amap.com,🎯 本地直连
+  - DOMAIN-SUFFIX,autonavi.com,🎯 本地直连
+  - DOMAIN-SUFFIX,ctrip.com,🎯 本地直连
+  - DOMAIN-SUFFIX,qyer.com,🎯 本地直连
+  - DOMAIN-SUFFIX,smzdm.com,🎯 本地直连
+  - DOMAIN-SUFFIX,sspai.com,🎯 本地直连
+  - DOMAIN-SUFFIX,ithome.com,🎯 本地直连
+
+  # 手动添加的缓存 / 加速域名
+  - DOMAIN-SUFFIX,msftconnecttest.com,🎯 本地直连
+  - DOMAIN-SUFFIX,iggfastweb.com,🎯 本地直连
+  - DOMAIN-SUFFIX,igcaches.com,🎯 本地直连
+  - DOMAIN-SUFFIX,edgehelper.com,🎯 本地直连
+  - DOMAIN-SUFFIX,ifastcdncache.com,🎯 本地直连
+  - DOMAIN-SUFFIX,harmonyoscloudcdn.com,🎯 本地直连
+  - DOMAIN-SUFFIX,harmonyoscloudcache.com,🎯 本地直连
+  - DOMAIN-SUFFIX,harmonycloudcache.com,🎯 本地直连
+  - DOMAIN-SUFFIX,harmonycloudcdn.com,🎯 本地直连
+  - DOMAIN-SUFFIX,steamgamepowered.net,🎯 本地直连
+  - DOMAIN-SUFFIX,steamgamepowered.com,🎯 本地直连
+  - DOMAIN-SUFFIX,steamliveonline.com,🎯 本地直连
+  - DOMAIN-SUFFIX,steamliveonline.net,🎯 本地直连
+  - DOMAIN-SUFFIX,steamliveonline.org,🎯 本地直连
+  - DOMAIN-SUFFIX,netvigators.xyz,🎯 本地直连
+  - DOMAIN-SUFFIX,netvigatorscdn.com,🎯 本地直连
+  - DOMAIN-SUFFIX,netvigatorscdn.net,🎯 本地直连
+  - DOMAIN-SUFFIX,netvigatorscdn.xyz,🎯 本地直连
+  - DOMAIN-SUFFIX,huawei-static.com,🎯 本地直连
+  - DOMAIN-SUFFIX,bilibilivideoapi.com,🎯 本地直连
+  - DOMAIN-SUFFIX,bilibilivideoapi.net,🎯 本地直连
+  - DOMAIN-SUFFIX,hdslbbilibili.com,🎯 本地直连
+  - DOMAIN-SUFFIX,pubmed-hub.com,🎯 本地直连
+  - DOMAIN-SUFFIX,mssstatic.com,🎯 本地直连
+  - DOMAIN-SUFFIX,iggwebcache.com,🎯 本地直连
+  - DOMAIN-SUFFIX,cache100.xyz,🎯 本地直连
+  - DOMAIN-SUFFIX,malagame.xyz,🎯 本地直连
+  - DOMAIN-SUFFIX,malagame.com,🎯 本地直连
+  - DOMAIN-SUFFIX,malagame.net,🎯 本地直连
+  - DOMAIN-SUFFIX,kwaicdnkuaishou.com,🎯 本地直连
+  - DOMAIN-SUFFIX,71edgeiqiyi.com,🎯 本地直连
+  - DOMAIN-SUFFIX,hktserviceonline.com,🎯 本地直连
+  - DOMAIN-SUFFIX,workflowapis.net,🎯 本地直连
+  - DOMAIN-SUFFIX,onnets1.net,🎯 本地直连
+  - DOMAIN-SUFFIX,onnets1.com,🎯 本地直连
+  - DOMAIN-SUFFIX,onnets1.xyz,🎯 本地直连
+  - DOMAIN-SUFFIX,nttsoftgroup.com,🎯 本地直连
+  - DOMAIN-SUFFIX,macyscdn.net,🎯 本地直连
+  - DOMAIN-SUFFIX,macyscdn.com,🎯 本地直连
+  - DOMAIN-SUFFIX,inetvigator.net,🎯 本地直连
+  - DOMAIN-SUFFIX,virginatlanticgroup.net,🎯 本地直连
+  - DOMAIN-SUFFIX,istreamhouse.net,🎯 本地直连
+  - DOMAIN-SUFFIX,douyincdn.net,🎯 本地直连
+  - DOMAIN-SUFFIX,douyinlive.net,🎯 本地直连
+  - DOMAIN-SUFFIX,douyincache.com,🎯 本地直连
+  - DOMAIN-SUFFIX,onetcdn.com,🎯 本地直连
+
+  # 国内 IP 直连
+  - GEOIP,CN,🎯 本地直连
+
+  # 兜底
+  - MATCH,🐟 漏网之鱼
