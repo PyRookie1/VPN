@@ -81,9 +81,15 @@ proxy-groups:
       - ✈️ 我的机场
 
   - name: 👽 ChatGPT
-    type: select
+    type: url-test
     use:
       - ✈️ 我的机场
+    url: https://cp.cloudflare.com/generate_204
+    interval: 300
+    tolerance: 50
+    timeout: 5000
+    expected-status: 204
+    lazy: true
     exclude-filter: '(?i)(🇭🇰|香港|港|\bHK\b|Hong\s*Kong|HKG)'
 
   - name: ♻️ 自动选择
