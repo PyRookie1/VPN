@@ -84,7 +84,7 @@ proxy-groups:
     type: select
     use:
       - ✈️ 我的机场
-    exclude-filter: '(?i)(🇭🇰|香港|港|\bHK\b|Hong\s*Kong|HKG)'
+    filter: '(?i)(ChatGPT|chatgpt|AI|ai)'
 
   - name: ♻️ 自动选择
     type: url-test
