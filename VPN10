@@ -82,9 +82,10 @@ proxy-groups:
 
   - name: 👽 ChatGPT
     type: select
+    filter: '(?i)(ChatGPT)'
     use:
       - ✈️ 我的机场
-    filter: '(?i)(ChatGPT)'
+
 
   - name: ♻️ 自动选择
     type: url-test
