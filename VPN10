@@ -36,37 +36,37 @@ dns:
     - https://doh.pub/dns-query
 
   fallback:
-    - 'https://1.1.1.1/dns-query#♻️ 自动选择'
-    - 'https://8.8.8.8/dns-query#♻️ 自动选择'
+    - "https://1.1.1.1/dns-query#♻️ 自动选择"
+    - "https://8.8.8.8/dns-query#♻️ 自动选择"
 
   fallback-filter:
     geoip: true
     geoip-code: CN
     domain:
-      - '+.chatgpt.com'
-      - '+.openai.com'
-      - '+.oaistatic.com'
-      - '+.oaiusercontent.com'
-      - '+.oaistatsig.com'
-      - '+.openaimerge.com'
+      - +.chatgpt.com
+      - +.openai.com
+      - +.oaistatic.com
+      - +.oaiusercontent.com
+      - +.oaistatsig.com
+      - +.openaimerge.com
 
   fake-ip-filter:
     - "*.lan"
     - "*.local"
-    - "localhost"
-    - "+.msftconnecttest.com"
-    - "+.msftncsi.com"
+    - localhost
+    - +.msftconnecttest.com
+    - +.msftncsi.com
     - "time.*.com"
     - "time.*.gov"
     - "time.*.edu.cn"
     - "ntp.*.com"
-    - "time1.cloud.tencent.com"
+    - time1.cloud.tencent.com
 
 proxy-providers:
-  # 通用 provider：Google / YouTube / Telegram / GitHub / 流媒体等共用
-  ✈️ 我的机场:
+  # 先在机场后台重置订阅链接，再将新链接填入此处。
+  "✈️ 我的机场":
     type: http
-    url: &airport_url "https://feed.iggv5.com/c/76c8d23a-f597-4f5a-a0c0-3bf2ccd93344/platform/clash/iGG-iGuge"
+    url: &airport_url "REPLACE_WITH_NEW_SUBSCRIPTION_URL"
     interval: 3600
     path: ./wodejichang.yaml
     health-check:
@@ -77,20 +77,16 @@ proxy-providers:
       url: https://www.gstatic.com/generate_204
       expected-status: 204
 
-  # ChatGPT 专用 provider：同一订阅，但使用 ChatGPT 链路测速
-  👽 ChatGPT机场:
+  # 与通用 provider 使用同一订阅，但节点名前加 [GPT]，并排除不适用地区。
+  "👽 ChatGPT机场":
     type: http
     url: *airport_url
     interval: 3600
     path: ./wodejichang-chatgpt.yaml
-
-    # 排除常见 OpenAI 非支持地区出口
     exclude-filter: '(?i)(🇭🇰|香港|港|\bHK\b|\bHKG\b|Hong\s*Kong|🇲🇴|澳门|澳門|\bMO\b|Macau|Macao|🇨🇳|大陆|大陸|\bCN\b|Mainland\s*China|🇷🇺|俄罗斯|俄羅斯|\bRU\b|Russia|🇧🇾|白俄罗斯|白俄羅斯|\bBY\b|Belarus)'
-
-    # 避免与原 provider 中同名节点混淆
     override:
       additional-prefix: "[GPT] "
-
+    # 这里只更新节点延迟和可用状态，不会切换 select 组中的当前节点。
     health-check:
       enable: true
       interval: 600
@@ -103,132 +99,114 @@ proxy-groups:
   # ==============================
   # 通用节点
   # ==============================
-
-  - name: 🔰 节点选择
+  - name: "🔰 节点选择"
     type: select
     proxies:
-      - ♻️ 自动选择
-      - ⚖️ 负载均衡
-      - 🎯 本地直连
+      - "♻️ 自动选择"
+      - "⚖️ 负载均衡"
+      - "🎯 本地直连"
     use:
-      - ✈️ 我的机场
+      - "✈️ 我的机场"
 
   # ==============================
-  # ChatGPT
+  # ChatGPT：纯手动选择
   #
-  # 第一层 select：
-  # 默认自动，也允许手动选择任意 [GPT] 节点
+  # Clash Verge 可以点击测速并按延迟排序；测速不会自动切换节点。
+  # 首次加载配置后，请在本组中手动选择一个具体的 [GPT] 节点。
   # ==============================
-
-  - name: 👽 ChatGPT
+  - name: "👽 ChatGPT"
     type: select
-    proxies:
-      - 🚀 ChatGPT自动
     use:
-      - 👽 ChatGPT机场
-
-  # 第二层自动优选：
-  # 延迟差距不足 100ms 时尽量不切换出口 IP
-  - name: 🚀 ChatGPT自动
-    type: url-test
-    use:
-      - 👽 ChatGPT机场
-    tolerance: 100
+      - "👽 ChatGPT机场"
 
   # ==============================
   # 通用自动选择
-  #
-  # 测速 URL 已由 ✈️ 我的机场
-  # provider 的 health-check 提供
   # ==============================
-
-  - name: ♻️ 自动选择
+  - name: "♻️ 自动选择"
     type: url-test
     use:
-      - ✈️ 我的机场
+      - "✈️ 我的机场"
     tolerance: 50
 
-  - name: ⚖️ 负载均衡
+  - name: "⚖️ 负载均衡"
     type: load-balance
     strategy: consistent-hashing
     use:
-      - ✈️ 我的机场
+      - "✈️ 我的机场"
 
   # ==============================
   # 服务策略
   # ==============================
-
-  - name: 🤖 AI服务
+  - name: "🤖 AI服务"
     type: select
     proxies:
-      - 🔰 节点选择
-      - ♻️ 自动选择
-      - 👽 ChatGPT
+      - "🔰 节点选择"
+      - "♻️ 自动选择"
+      - "👽 ChatGPT"
 
-  - name: 🌍 国外媒体
+  - name: "🌍 国外媒体"
     type: select
     proxies:
-      - 🔰 节点选择
-      - ♻️ 自动选择
-      - ⚖️ 负载均衡
-      - 🎯 本地直连
+      - "🔰 节点选择"
+      - "♻️ 自动选择"
+      - "⚖️ 负载均衡"
+      - "🎯 本地直连"
     use:
-      - ✈️ 我的机场
+      - "✈️ 我的机场"
 
-  - name: 🌏 国内媒体
+  - name: "🌏 国内媒体"
     type: select
     proxies:
-      - 🎯 本地直连
-      - 🔰 节点选择
+      - "🎯 本地直连"
+      - "🔰 节点选择"
 
-  - name: Ⓜ️ 微软服务
+  - name: "Ⓜ️ 微软服务"
     type: select
     proxies:
-      - 🎯 本地直连
-      - 🔰 节点选择
-      - ♻️ 自动选择
+      - "🎯 本地直连"
+      - "🔰 节点选择"
+      - "♻️ 自动选择"
 
-  - name: 📲 电报信息
+  - name: "📲 电报信息"
     type: select
     proxies:
-      - 🔰 节点选择
-      - ♻️ 自动选择
-      - 🎯 本地直连
+      - "🔰 节点选择"
+      - "♻️ 自动选择"
+      - "🎯 本地直连"
     use:
-      - ✈️ 我的机场
+      - "✈️ 我的机场"
 
-  - name: 🍎 苹果服务
+  - name: "🍎 苹果服务"
     type: select
     proxies:
-      - 🎯 本地直连
-      - 🔰 节点选择
-      - ♻️ 自动选择
+      - "🎯 本地直连"
+      - "🔰 节点选择"
+      - "♻️ 自动选择"
 
   - name: SteamGame
     type: select
     proxies:
-      - 🎯 本地直连
-      - 🔰 节点选择
-      - ♻️ 自动选择
+      - "🎯 本地直连"
+      - "🔰 节点选择"
+      - "♻️ 自动选择"
 
-  - name: 🎯 本地直连
+  - name: "🎯 本地直连"
     type: select
     proxies:
       - DIRECT
 
-  - name: 🐟 漏网之鱼
+  - name: "🐟 漏网之鱼"
     type: select
     proxies:
-      - 🔰 节点选择
-      - ♻️ 自动选择
-      - ⚖️ 负载均衡
-      - 🎯 本地直连
+      - "🔰 节点选择"
+      - "♻️ 自动选择"
+      - "⚖️ 负载均衡"
+      - "🎯 本地直连"
 
 rules:
   # ==============================
   # 局域网 / 本机
   # ==============================
-
   - DOMAIN-SUFFIX,local,🎯 本地直连
   - IP-CIDR,127.0.0.0/8,🎯 本地直连,no-resolve
   - IP-CIDR,10.0.0.0/8,🎯 本地直连,no-resolve
@@ -242,12 +220,7 @@ rules:
 
   # ==============================
   # ChatGPT / OpenAI
-  #
-  # chatgpt.com 已包含 ws.chatgpt.com
-  # openai.com 已包含 auth.openai.com /
-  # chat.openai.com / desktop.chat.openai.com 等
   # ==============================
-
   - DOMAIN-SUFFIX,chatgpt.com,👽 ChatGPT
   - DOMAIN-SUFFIX,openai.com,👽 ChatGPT
   - DOMAIN-SUFFIX,oaistatic.com,👽 ChatGPT
@@ -263,7 +236,6 @@ rules:
   # ==============================
   # 其他 AI 服务
   # ==============================
-
   - DOMAIN-SUFFIX,claude.ai,🤖 AI服务
   - DOMAIN-SUFFIX,anthropic.com,🤖 AI服务
   - DOMAIN,bard.google.com,🤖 AI服务
@@ -274,7 +246,6 @@ rules:
   # ==============================
   # Telegram
   # ==============================
-
   - DOMAIN-SUFFIX,t.me,📲 电报信息
   - DOMAIN-SUFFIX,tdesktop.com,📲 电报信息
   - DOMAIN-SUFFIX,telegra.ph,📲 电报信息
@@ -294,7 +265,6 @@ rules:
   # ==============================
   # Microsoft
   # ==============================
-
   - DOMAIN-KEYWORD,1drv,Ⓜ️ 微软服务
   - DOMAIN-KEYWORD,microsoft,Ⓜ️ 微软服务
   - DOMAIN-SUFFIX,live.com,Ⓜ️ 微软服务
@@ -325,7 +295,6 @@ rules:
   # ==============================
   # Apple
   # ==============================
-
   - DOMAIN-SUFFIX,aaplimg.com,🍎 苹果服务
   - DOMAIN-SUFFIX,apple.co,🍎 苹果服务
   - DOMAIN-SUFFIX,apple.com,🍎 苹果服务
@@ -342,7 +311,6 @@ rules:
   # ==============================
   # 国外媒体
   # ==============================
-
   - DOMAIN-SUFFIX,youtube.com,🌍 国外媒体
   - DOMAIN-SUFFIX,youtu.be,🌍 国外媒体
   - DOMAIN-SUFFIX,ytimg.com,🌍 国外媒体
@@ -385,7 +353,6 @@ rules:
   # ==============================
   # 国内媒体
   # ==============================
-
   - DOMAIN-SUFFIX,acg.tv,🌏 国内媒体
   - DOMAIN-SUFFIX,acgvideo.com,🌏 国内媒体
   - DOMAIN-SUFFIX,b23.tv,🌏 国内媒体
@@ -411,7 +378,6 @@ rules:
   # ==============================
   # Steam
   # ==============================
-
   - DOMAIN,api.steampowered.com,SteamGame
   - DOMAIN,store.steampowered.com,SteamGame
   - DOMAIN-SUFFIX,steampowered.com,SteamGame
@@ -428,7 +394,6 @@ rules:
   # ==============================
   # 常见需要代理的服务
   # ==============================
-
   - DOMAIN-KEYWORD,google,🔰 节点选择
   - DOMAIN-KEYWORD,blogspot,🔰 节点选择
   - DOMAIN-KEYWORD,github,🔰 节点选择
@@ -488,7 +453,6 @@ rules:
   # ==============================
   # 国内常见服务直连
   # ==============================
-
   - DOMAIN-SUFFIX,cn,🎯 本地直连
   - DOMAIN-SUFFIX,baidu.com,🎯 本地直连
   - DOMAIN-SUFFIX,bdstatic.com,🎯 本地直连
@@ -528,9 +492,7 @@ rules:
 
   # ==============================
   # 手动添加的缓存 / 加速域名
-  # 原样保留
   # ==============================
-
   - DOMAIN-SUFFIX,msftconnecttest.com,🎯 本地直连
   - DOMAIN-SUFFIX,iggfastweb.com,🎯 本地直连
   - DOMAIN-SUFFIX,igcaches.com,🎯 本地直连
@@ -579,13 +541,7 @@ rules:
   - DOMAIN-SUFFIX,onetcdn.com,🎯 本地直连
 
   # ==============================
-  # 国内 IP 直连
+  # 国内 IP 直连 / 兜底
   # ==============================
-
   - GEOIP,CN,🎯 本地直连
-
-  # ==============================
-  # 兜底
-  # ==============================
-
   - MATCH,🐟 漏网之鱼
