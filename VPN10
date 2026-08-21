@@ -83,10 +83,9 @@ proxy-providers:
     url: *airport_url
     interval: 3600
     path: ./wodejichang-chatgpt.yaml
-    exclude-filter: '(?i)(🇭🇰|香港|港|\bHK\b|\bHKG\b|Hong\s*Kong|🇲🇴|澳门|澳門|\bMO\b|Macau|Macao|🇨🇳|大陆|大陸|\bCN\b|Mainland\s*China|🇷🇺|俄罗斯|俄羅斯|\bRU\b|Russia|🇧🇾|白俄罗斯|白俄羅斯|\bBY\b|Belarus)'
+    filter: '(?i)(🇹🇼|台湾|台灣|Taiwan|Taipei|台北|臺北|Kaohsiung|高雄|Taichung|台中|臺中|\bTW\b|\bTWN\b)'
     override:
       additional-prefix: "[GPT] "
-    # 这里只更新节点延迟和可用状态，不会切换 select 组中的当前节点。
     health-check:
       enable: true
       interval: 600
