@@ -80,7 +80,7 @@ proxy-providers:
   # 第二订阅：ChatGPT 只使用本订阅；本订阅也加入其他通用策略组。
   "👽 ChatGPT机场":
     type: http
-    url: "https://ipequal.com/use/unsafe/sub.php?t=eyJ1dWlkIjoiNTZDQjcwQ0ItNTNCMS00NTY5LTkzQkMtNjBFREY2Q0QyQzcwIiwic2VydmVyIjoiMzguNTguNTcuMTQ4IiwicG9ydCI6IjQyODkyIiwicHVibGljX2tleSI6ImVJRzQwMmw5bFotLVJDdUM5aTVfUWJqYkJQdUU0dTk2bHdMNGF5dTRaU00iLCJzaG9ydF9pZCI6IjIwYWM0ZGEyMzc3YmQxYjUiLCJzZXJ2ZXJuYW1lIjoiZ2F0ZXdheS5pY2xvdWQuY29tIiwidG90YWwiOjE1MDMyMzg1NTM2MDAsImV4cGlyZSI6MTgxOTU0MTQ3M30&s=6fd4ed1cc40906023d8715132fc91a1c35023056813e79fd3b72510fc3d81634"
+    url: "https://equaldcdn.com/use/unsafe/sub.php?t=eyJ1dWlkIjoiNTZDQjcwQ0ItNTNCMS00NTY5LTkzQkMtNjBFREY2Q0QyQzcwIiwic2VydmVyIjoiMzguNTguNTcuMTQ4IiwicG9ydCI6IjQyODkyIiwicHVibGljX2tleSI6ImVJRzQwMmw5bFotLVJDdUM5aTVfUWJqYkJQdUU0dTk2bHdMNGF5dTRaU00iLCJzaG9ydF9pZCI6IjIwYWM0ZGEyMzc3YmQxYjUiLCJzZXJ2ZXJuYW1lIjoiZ2F0ZXdheS5pY2xvdWQuY29tIiwidG90YWwiOjE1MDMyMzg1NTM2MDAsImV4cGlyZSI6MTgxOTU0MTQ3M30&s=6fd4ed1cc40906023d8715132fc91a1c35023056813e79fd3b72510fc3d81634"
     interval: 3600
     path: ./wodejichang-chatgpt.yaml
     override:
