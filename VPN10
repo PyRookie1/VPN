@@ -14,48 +14,69 @@ profile:
   store-selected: true
   store-fake-ip: true
 
+# 必须在 Clash Verge 中实际开启 TUN/服务模式，并检查最终运行配置未被 GUI 覆盖。
+tun:
+  enable: true
+  stack: mixed
+  auto-route: true
+  auto-detect-interface: true
+  strict-route: true
+  dns-hijack:
+    - any:53
+    - tcp://any:53
+
 dns:
   enable: true
+  listen: 127.0.0.1:1053
   ipv6: false
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
   use-hosts: true
   use-system-hosts: true
+  respect-rules: true
+  prefer-h3: false
 
+  # 只用于解析上游 DNS 的域名；使用加密协议，避免明文引导查询。
   default-nameserver:
-    - 223.5.5.5
-    - 119.29.29.29
-    - 180.76.76.76
+    - tls://223.5.5.5
+    - tls://223.6.6.6
 
-  proxy-server-nameserver:
-    - https://dns.alidns.com/dns-query
-    - https://doh.pub/dns-query
+  # 代理节点域名以及 DIRECT 出口使用国内加密 DNS。
+  proxy-server-nameserver: &domestic_dns
+    - "https://dns.alidns.com/dns-query#DIRECT"
+    - "https://doh.pub/dns-query#DIRECT"
+  direct-nameserver: *domestic_dns
 
+  # 默认真实解析使用境外 DoH，并强制经过不含 DIRECT 的自动选择组。
   nameserver:
-    - https://dns.alidns.com/dns-query
-    - https://doh.pub/dns-query
-
-  fallback:
     - "https://1.1.1.1/dns-query#♻️ 自动选择"
     - "https://8.8.8.8/dns-query#♻️ 自动选择"
 
-  fallback-filter:
-    geoip: true
-    geoip-code: CN
-    domain:
-      - +.chatgpt.com
-      - +.openai.com
-      - +.oaistatic.com
-      - +.oaiusercontent.com
-      - +.oaistatsig.com
-      - +.openaimerge.com
+  nameserver-policy:
+    # 国内及私有域名使用国内加密 DNS。
+    "geosite:cn,private": *domestic_dns
+
+    # ChatGPT 全部相关域名与网站连接使用同一专用策略组。
+    "+.chatgpt.com": &chatgpt_dns
+      - "https://1.1.1.1/dns-query#👽 ChatGPT"
+      - "https://8.8.8.8/dns-query#👽 ChatGPT"
+    "+.openai.com": *chatgpt_dns
+    "+.oaistatic.com": *chatgpt_dns
+    "+.oaiusercontent.com": *chatgpt_dns
+    "+.oaistatsig.com": *chatgpt_dns
+    "+.openaimerge.com": *chatgpt_dns
+    "+.workos.com": *chatgpt_dns
+    "+.workoscdn.com": *chatgpt_dns
+    "workos.imgix.net": *chatgpt_dns
+    "o207216.ingest.sentry.io": *chatgpt_dns
+    "o33249.ingest.sentry.io": *chatgpt_dns
 
   fake-ip-filter:
     - "*.lan"
     - "*.local"
     - localhost
-    - +.msftconnecttest.com
-    - +.msftncsi.com
+    - "+.msftconnecttest.com"
+    - "+.msftncsi.com"
     - "time.*.com"
     - "time.*.gov"
     - "time.*.edu.cn"
@@ -94,9 +115,6 @@ proxy-providers:
       expected-status: 200
 
 proxy-groups:
-  # ==============================
-  # 通用节点
-  # ==============================
   - name: "🔰 节点选择"
     type: select
     proxies:
@@ -107,20 +125,11 @@ proxy-groups:
       - "✈️ 我的机场"
       - "👽 ChatGPT机场"
 
-  # ==============================
-  # ChatGPT：纯手动选择
-  #
-  # Clash Verge 可以点击测速并按延迟排序；测速不会自动切换节点。
-  # 首次加载配置后，请在本组中手动选择一个具体的 [GPT] 节点。
-  # ==============================
   - name: "👽 ChatGPT"
     type: select
     use:
       - "👽 ChatGPT机场"
 
-  # ==============================
-  # 通用自动选择
-  # ==============================
   - name: "♻️ 自动选择"
     type: url-test
     use:
@@ -137,9 +146,6 @@ proxy-groups:
       - "✈️ 我的机场"
       - "👽 ChatGPT机场"
 
-  # ==============================
-  # 服务策略
-  # ==============================
   - name: "🌍 国外媒体"
     type: select
     proxies:
@@ -181,9 +187,7 @@ proxy-groups:
       - "🎯 本地直连"
 
 rules:
-  # ==============================
   # 局域网 / 本机
-  # ==============================
   - DOMAIN-SUFFIX,local,🎯 本地直连
   - IP-CIDR,127.0.0.0/8,🎯 本地直连,no-resolve
   - IP-CIDR,10.0.0.0/8,🎯 本地直连,no-resolve
@@ -195,9 +199,7 @@ rules:
   - IP-CIDR6,fe80::/10,🎯 本地直连,no-resolve
   - IP-CIDR6,fd00::/8,🎯 本地直连,no-resolve
 
-  # ==============================
   # ChatGPT / OpenAI
-  # ==============================
   - DOMAIN-SUFFIX,chatgpt.com,👽 ChatGPT
   - DOMAIN-SUFFIX,openai.com,👽 ChatGPT
   - DOMAIN-SUFFIX,oaistatic.com,👽 ChatGPT
@@ -210,9 +212,7 @@ rules:
   - DOMAIN,o207216.ingest.sentry.io,👽 ChatGPT
   - DOMAIN,o33249.ingest.sentry.io,👽 ChatGPT
 
-  # ==============================
   # Telegram
-  # ==============================
   - DOMAIN-SUFFIX,t.me,📲 电报信息
   - DOMAIN-SUFFIX,tdesktop.com,📲 电报信息
   - DOMAIN-SUFFIX,telegra.ph,📲 电报信息
@@ -229,9 +229,7 @@ rules:
   - IP-CIDR6,2001:b28:f23f::/48,📲 电报信息,no-resolve
   - IP-CIDR6,2001:67c:4e8::/48,📲 电报信息,no-resolve
 
-  # ==============================
   # Microsoft（并入国内媒体）
-  # ==============================
   - DOMAIN-KEYWORD,1drv,🌏 国内媒体
   - DOMAIN-KEYWORD,microsoft,🌏 国内媒体
   - DOMAIN-SUFFIX,live.com,🌏 国内媒体
@@ -259,9 +257,7 @@ rules:
   - DOMAIN-SUFFIX,msauth.net,🌏 国内媒体
   - DOMAIN-SUFFIX,aka.ms,🌏 国内媒体
 
-  # ==============================
   # Apple（并入国内媒体）
-  # ==============================
   - DOMAIN-SUFFIX,aaplimg.com,🌏 国内媒体
   - DOMAIN-SUFFIX,apple.co,🌏 国内媒体
   - DOMAIN-SUFFIX,apple.com,🌏 国内媒体
@@ -275,9 +271,7 @@ rules:
   - DOMAIN-SUFFIX,me.com,🌏 国内媒体
   - DOMAIN-SUFFIX,mzstatic.com,🌏 国内媒体
 
-  # ==============================
   # 国外媒体
-  # ==============================
   - DOMAIN-SUFFIX,youtube.com,🌍 国外媒体
   - DOMAIN-SUFFIX,youtu.be,🌍 国外媒体
   - DOMAIN-SUFFIX,ytimg.com,🌍 国外媒体
@@ -317,9 +311,7 @@ rules:
   - DOMAIN-SUFFIX,nicovideo.jp,🌍 国外媒体
   - DOMAIN-SUFFIX,nimg.jp,🌍 国外媒体
 
-  # ==============================
   # 国内媒体
-  # ==============================
   - DOMAIN-SUFFIX,acg.tv,🌏 国内媒体
   - DOMAIN-SUFFIX,acgvideo.com,🌏 国内媒体
   - DOMAIN-SUFFIX,b23.tv,🌏 国内媒体
@@ -342,9 +334,7 @@ rules:
   - DOMAIN-SUFFIX,mgtv.com,🌏 国内媒体
   - DOMAIN-SUFFIX,hitv.com,🌏 国内媒体
 
-  # ==============================
   # Steam（并入国内媒体）
-  # ==============================
   - DOMAIN,api.steampowered.com,🌏 国内媒体
   - DOMAIN,store.steampowered.com,🌏 国内媒体
   - DOMAIN-SUFFIX,steampowered.com,🌏 国内媒体
@@ -358,9 +348,7 @@ rules:
   - DOMAIN-SUFFIX,steamcdn-a.akamaihd.net,🌏 国内媒体
   - DOMAIN-SUFFIX,steamstat.us,🌏 国内媒体
 
-  # ==============================
   # 常见需要代理的服务
-  # ==============================
   - DOMAIN-KEYWORD,google,🔰 节点选择
   - DOMAIN-KEYWORD,blogspot,🔰 节点选择
   - DOMAIN-KEYWORD,github,🔰 节点选择
@@ -417,9 +405,7 @@ rules:
   - DOMAIN-SUFFIX,kakao.com,🔰 节点选择
   - DOMAIN-SUFFIX,pixiv.net,🔰 节点选择
 
-  # ==============================
   # 国内常见服务直连
-  # ==============================
   - DOMAIN-SUFFIX,cn,🎯 本地直连
   - DOMAIN-SUFFIX,baidu.com,🎯 本地直连
   - DOMAIN-SUFFIX,bdstatic.com,🎯 本地直连
@@ -457,9 +443,7 @@ rules:
   - DOMAIN-SUFFIX,sspai.com,🎯 本地直连
   - DOMAIN-SUFFIX,ithome.com,🎯 本地直连
 
-  # ==============================
   # 手动添加的缓存 / 加速域名
-  # ==============================
   - DOMAIN-SUFFIX,msftconnecttest.com,🎯 本地直连
   - DOMAIN-SUFFIX,iggfastweb.com,🎯 本地直连
   - DOMAIN-SUFFIX,igcaches.com,🎯 本地直连
@@ -507,8 +491,6 @@ rules:
   - DOMAIN-SUFFIX,douyincache.com,🎯 本地直连
   - DOMAIN-SUFFIX,onetcdn.com,🎯 本地直连
 
-  # ==============================
   # 国内 IP 直连 / 兜底
-  # ==============================
   - GEOIP,CN,🎯 本地直连
   - MATCH,🐟 漏网之鱼
