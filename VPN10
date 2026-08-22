@@ -63,10 +63,10 @@ dns:
     - time1.cloud.tencent.com
 
 proxy-providers:
-  # 先在机场后台重置订阅链接，再将新链接填入此处。
+  # 通用订阅：与第二订阅共同供 ChatGPT 之外的策略组使用。
   "✈️ 我的机场":
     type: http
-    url: &airport_url "REPLACE_WITH_NEW_SUBSCRIPTION_URL"
+    url: "https://feed.iggv5.com/c/76c8d23a-f597-4f5a-a0c0-3bf2ccd93344/platform/clash/iGG-iGuge"
     interval: 3600
     path: ./wodejichang.yaml
     health-check:
@@ -77,13 +77,12 @@ proxy-providers:
       url: https://www.gstatic.com/generate_204
       expected-status: 204
 
-  # 与通用 provider 使用同一订阅，但节点名前加 [GPT]，并排除不适用地区。
+  # 第二订阅：ChatGPT 只使用本订阅；本订阅也加入其他通用策略组。
   "👽 ChatGPT机场":
     type: http
-    url: *airport_url
+    url: "https://ipequal.com/use/unsafe/sub.php?t=eyJ1dWlkIjoiNTZDQjcwQ0ItNTNCMS00NTY5LTkzQkMtNjBFREY2Q0QyQzcwIiwic2VydmVyIjoiMzguNTguNTcuMTQ4IiwicG9ydCI6IjQyODkyIiwicHVibGljX2tleSI6ImVJRzQwMmw5bFotLVJDdUM5aTVfUWJqYkJQdUU0dTk2bHdMNGF5dTRaU00iLCJzaG9ydF9pZCI6IjIwYWM0ZGEyMzc3YmQxYjUiLCJzZXJ2ZXJuYW1lIjoiZ2F0ZXdheS5pY2xvdWQuY29tIiwidG90YWwiOjE1MDMyMzg1NTM2MDAsImV4cGlyZSI6MTgxOTU0MTQ3M30&s=6fd4ed1cc40906023d8715132fc91a1c35023056813e79fd3b72510fc3d81634"
     interval: 3600
     path: ./wodejichang-chatgpt.yaml
-    filter: '(?i)(🇹🇼|台湾|台灣|Taiwan|Taipei|台北|臺北|Kaohsiung|高雄|Taichung|台中|臺中|\bTW\b|\bTWN\b)'
     override:
       additional-prefix: "[GPT] "
     health-check:
@@ -106,6 +105,7 @@ proxy-groups:
       - "🎯 本地直连"
     use:
       - "✈️ 我的机场"
+      - "👽 ChatGPT机场"
 
   # ==============================
   # ChatGPT：纯手动选择
@@ -125,6 +125,9 @@ proxy-groups:
     type: url-test
     use:
       - "✈️ 我的机场"
+      - "👽 ChatGPT机场"
+    url: https://www.gstatic.com/generate_204
+    interval: 300
     tolerance: 50
 
   - name: "⚖️ 负载均衡"
@@ -132,17 +135,11 @@ proxy-groups:
     strategy: consistent-hashing
     use:
       - "✈️ 我的机场"
+      - "👽 ChatGPT机场"
 
   # ==============================
   # 服务策略
   # ==============================
-  - name: "🤖 AI服务"
-    type: select
-    proxies:
-      - "🔰 节点选择"
-      - "♻️ 自动选择"
-      - "👽 ChatGPT"
-
   - name: "🌍 国外媒体"
     type: select
     proxies:
@@ -152,19 +149,13 @@ proxy-groups:
       - "🎯 本地直连"
     use:
       - "✈️ 我的机场"
+      - "👽 ChatGPT机场"
 
   - name: "🌏 国内媒体"
     type: select
     proxies:
       - "🎯 本地直连"
       - "🔰 节点选择"
-
-  - name: "Ⓜ️ 微软服务"
-    type: select
-    proxies:
-      - "🎯 本地直连"
-      - "🔰 节点选择"
-      - "♻️ 自动选择"
 
   - name: "📲 电报信息"
     type: select
@@ -174,20 +165,7 @@ proxy-groups:
       - "🎯 本地直连"
     use:
       - "✈️ 我的机场"
-
-  - name: "🍎 苹果服务"
-    type: select
-    proxies:
-      - "🎯 本地直连"
-      - "🔰 节点选择"
-      - "♻️ 自动选择"
-
-  - name: SteamGame
-    type: select
-    proxies:
-      - "🎯 本地直连"
-      - "🔰 节点选择"
-      - "♻️ 自动选择"
+      - "👽 ChatGPT机场"
 
   - name: "🎯 本地直连"
     type: select
@@ -233,16 +211,6 @@ rules:
   - DOMAIN,o33249.ingest.sentry.io,👽 ChatGPT
 
   # ==============================
-  # 其他 AI 服务
-  # ==============================
-  - DOMAIN-SUFFIX,claude.ai,🤖 AI服务
-  - DOMAIN-SUFFIX,anthropic.com,🤖 AI服务
-  - DOMAIN,bard.google.com,🤖 AI服务
-  - DOMAIN,gemini.google.com,🤖 AI服务
-  - DOMAIN-SUFFIX,gemini.googleapis.com,🤖 AI服务
-  - DOMAIN-SUFFIX,aida.googleapis.com,🤖 AI服务
-
-  # ==============================
   # Telegram
   # ==============================
   - DOMAIN-SUFFIX,t.me,📲 电报信息
@@ -262,50 +230,50 @@ rules:
   - IP-CIDR6,2001:67c:4e8::/48,📲 电报信息,no-resolve
 
   # ==============================
-  # Microsoft
+  # Microsoft（并入国内媒体）
   # ==============================
-  - DOMAIN-KEYWORD,1drv,Ⓜ️ 微软服务
-  - DOMAIN-KEYWORD,microsoft,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,live.com,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,live.net,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,msn.com,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,outlook.com,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,hotmail.com,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,office.com,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,office.net,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,office365.com,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,onedrive.com,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,sharepoint.com,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,sharepointonline.com,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,windows.com,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,windows.net,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,windowsupdate.com,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,xboxlive.com,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,xboxservices.com,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,azure.com,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,azure.net,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,azureedge.net,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,msedge.net,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,msftauth.net,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,msftidentity.com,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,msauth.net,Ⓜ️ 微软服务
-  - DOMAIN-SUFFIX,aka.ms,Ⓜ️ 微软服务
+  - DOMAIN-KEYWORD,1drv,🌏 国内媒体
+  - DOMAIN-KEYWORD,microsoft,🌏 国内媒体
+  - DOMAIN-SUFFIX,live.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,live.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,msn.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,outlook.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,hotmail.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,office.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,office.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,office365.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,onedrive.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,sharepoint.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,sharepointonline.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,windows.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,windows.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,windowsupdate.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,xboxlive.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,xboxservices.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,azure.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,azure.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,azureedge.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,msedge.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,msftauth.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,msftidentity.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,msauth.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,aka.ms,🌏 国内媒体
 
   # ==============================
-  # Apple
+  # Apple（并入国内媒体）
   # ==============================
-  - DOMAIN-SUFFIX,aaplimg.com,🍎 苹果服务
-  - DOMAIN-SUFFIX,apple.co,🍎 苹果服务
-  - DOMAIN-SUFFIX,apple.com,🍎 苹果服务
-  - DOMAIN-SUFFIX,apple.com.cn,🍎 苹果服务
-  - DOMAIN-SUFFIX,apple-cloudkit.com,🍎 苹果服务
-  - DOMAIN-SUFFIX,appstore.com,🍎 苹果服务
-  - DOMAIN-SUFFIX,cdn-apple.com,🍎 苹果服务
-  - DOMAIN-SUFFIX,icloud.com,🍎 苹果服务
-  - DOMAIN-SUFFIX,icloud.com.cn,🍎 苹果服务
-  - DOMAIN-SUFFIX,icloud-content.com,🍎 苹果服务
-  - DOMAIN-SUFFIX,me.com,🍎 苹果服务
-  - DOMAIN-SUFFIX,mzstatic.com,🍎 苹果服务
+  - DOMAIN-SUFFIX,aaplimg.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,apple.co,🌏 国内媒体
+  - DOMAIN-SUFFIX,apple.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,apple.com.cn,🌏 国内媒体
+  - DOMAIN-SUFFIX,apple-cloudkit.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,appstore.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,cdn-apple.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,icloud.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,icloud.com.cn,🌏 国内媒体
+  - DOMAIN-SUFFIX,icloud-content.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,me.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,mzstatic.com,🌏 国内媒体
 
   # ==============================
   # 国外媒体
@@ -375,20 +343,20 @@ rules:
   - DOMAIN-SUFFIX,hitv.com,🌏 国内媒体
 
   # ==============================
-  # Steam
+  # Steam（并入国内媒体）
   # ==============================
-  - DOMAIN,api.steampowered.com,SteamGame
-  - DOMAIN,store.steampowered.com,SteamGame
-  - DOMAIN-SUFFIX,steampowered.com,SteamGame
-  - DOMAIN-SUFFIX,steamcommunity.com,SteamGame
-  - DOMAIN-SUFFIX,steamserver.net,SteamGame
-  - DOMAIN-SUFFIX,steam-chat.com,SteamGame
-  - DOMAIN-SUFFIX,steamgames.com,SteamGame
-  - DOMAIN-SUFFIX,steamusercontent.com,SteamGame
-  - DOMAIN-SUFFIX,steamcontent.com,SteamGame
-  - DOMAIN-SUFFIX,steamstatic.com,SteamGame
-  - DOMAIN-SUFFIX,steamcdn-a.akamaihd.net,SteamGame
-  - DOMAIN-SUFFIX,steamstat.us,SteamGame
+  - DOMAIN,api.steampowered.com,🌏 国内媒体
+  - DOMAIN,store.steampowered.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,steampowered.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,steamcommunity.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,steamserver.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,steam-chat.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,steamgames.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,steamusercontent.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,steamcontent.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,steamstatic.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,steamcdn-a.akamaihd.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,steamstat.us,🌏 国内媒体
 
   # ==============================
   # 常见需要代理的服务
