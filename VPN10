@@ -334,19 +334,17 @@ rules:
   - DOMAIN-SUFFIX,mgtv.com,🌏 国内媒体
   - DOMAIN-SUFFIX,hitv.com,🌏 国内媒体
 
-  # Steam（并入国内媒体）
-  - DOMAIN,api.steampowered.com,🌏 国内媒体
-  - DOMAIN,store.steampowered.com,🌏 国内媒体
-  - DOMAIN-SUFFIX,steampowered.com,🌏 国内媒体
-  - DOMAIN-SUFFIX,steamcommunity.com,🌏 国内媒体
-  - DOMAIN-SUFFIX,steamserver.net,🌏 国内媒体
-  - DOMAIN-SUFFIX,steam-chat.com,🌏 国内媒体
-  - DOMAIN-SUFFIX,steamgames.com,🌏 国内媒体
-  - DOMAIN-SUFFIX,steamusercontent.com,🌏 国内媒体
-  - DOMAIN-SUFFIX,steamcontent.com,🌏 国内媒体
-  - DOMAIN-SUFFIX,steamstatic.com,🌏 国内媒体
-  - DOMAIN-SUFFIX,steamcdn-a.akamaihd.net,🌏 国内媒体
-  - DOMAIN-SUFFIX,steamstat.us,🌏 国内媒体
+  # Steam 下载/CDN优先直连，网页、社区等走代理
+  - DOMAIN-SUFFIX,steamserver.net,DIRECT
+  - DOMAIN-SUFFIX,steamcontent.com,DIRECT
+  - DOMAIN-SUFFIX,steamcdn-a.akamaihd.net,DIRECT
+  - DOMAIN,api.steampowered.com,🔰 节点选择
+  - DOMAIN,store.steampowered.com,🔰 节点选择
+  - DOMAIN-SUFFIX,steamcommunity.com,🔰 节点选择
+  - DOMAIN-SUFFIX,steam-chat.com,🔰 节点选择
+  - DOMAIN-SUFFIX,steamusercontent.com,🔰 节点选择
+  - DOMAIN-SUFFIX,steamstatic.com,🔰 节点选择
+  - DOMAIN-SUFFIX,steampowered.com,🔰 节点选择
 
   # 常见需要代理的服务
   - DOMAIN-KEYWORD,google,🔰 节点选择
