@@ -126,9 +126,12 @@ proxy-groups:
       - "👽 ChatGPT机场"
 
   - name: "👽 ChatGPT"
-    type: select
+    type: url-test
     use:
       - "👽 ChatGPT机场"
+    url: https://chatgpt.com/cdn-cgi/trace
+    interval: 300
+    tolerance: 50
 
   - name: "♻️ 自动选择"
     type: url-test
