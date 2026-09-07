@@ -14,6 +14,20 @@ profile:
   store-selected: true
   store-fake-ip: true
 
+# 域名嗅探：当应用自行解析 DNS 时，尽量从 HTTP/TLS/QUIC 恢复域名，避免 ChatGPT 流量落入普通兜底。
+sniffer:
+  enable: true
+  force-dns-mapping: true
+  parse-pure-ip: true
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+    TLS:
+      ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
+
 # 必须在 Clash Verge 中实际开启 TUN/服务模式，并检查最终运行配置未被 GUI 覆盖。
 tun:
   enable: true
@@ -56,10 +70,11 @@ dns:
     # 国内及私有域名使用国内加密 DNS。
     "geosite:cn,private": *domestic_dns
 
-    # ChatGPT 全部相关域名与网站连接使用同一专用策略组。
-    "+.chatgpt.com": &chatgpt_dns
+    # ChatGPT / OpenAI：主域名、官方 geosite 与关键共享依赖统一使用 ChatGPT 住宅机场解析。
+    "geosite:openai": &chatgpt_dns
       - "https://1.1.1.1/dns-query#👽 ChatGPT"
       - "https://8.8.8.8/dns-query#👽 ChatGPT"
+    "+.chatgpt.com": *chatgpt_dns
     "+.openai.com": *chatgpt_dns
     "+.oaistatic.com": *chatgpt_dns
     "+.oaiusercontent.com": *chatgpt_dns
@@ -70,6 +85,13 @@ dns:
     "workos.imgix.net": *chatgpt_dns
     "o207216.ingest.sentry.io": *chatgpt_dns
     "o33249.ingest.sentry.io": *chatgpt_dns
+    "+.ct.sendgrid.net": *chatgpt_dns
+    "+.intercom.io": *chatgpt_dns
+    "+.intercomcdn.com": *chatgpt_dns
+    "challenges.cloudflare.com": *chatgpt_dns
+    "humb.apple.com": *chatgpt_dns
+    "js.stripe.com": *chatgpt_dns
+    "rum.browser-intake-datadoghq.com": *chatgpt_dns
 
   fake-ip-filter:
     - "*.lan"
@@ -108,8 +130,8 @@ proxy-providers:
       additional-prefix: "[GPT] "
     health-check:
       enable: true
-      interval: 15
-      timeout: 3000
+      interval: 30
+      timeout: 5000
       lazy: false
       url: https://chatgpt.com/cdn-cgi/trace
       expected-status: 200
@@ -125,16 +147,11 @@ proxy-groups:
       - "✈️ 我的机场"
       - "👽 ChatGPT机场"
 
+  # ChatGPT 优先保持当前住宅出口，仅在当前节点失效时自动切换其他住宅节点。
   - name: "👽 ChatGPT"
-    type: url-test
+    type: fallback
     use:
       - "👽 ChatGPT机场"
-    url: https://chatgpt.com/cdn-cgi/trace
-    interval: 15
-    tolerance: 10
-    lazy: false
-    timeout: 3000
-    max-failed-times: 1
 
   - name: "♻️ 自动选择"
     type: url-test
@@ -205,7 +222,8 @@ rules:
   - IP-CIDR6,fe80::/10,🎯 本地直连,no-resolve
   - IP-CIDR6,fd00::/8,🎯 本地直连,no-resolve
 
-  # ChatGPT / OpenAI
+  # ChatGPT / OpenAI：优先保证整条链路使用 ChatGPT 住宅机场。
+  - GEOSITE,openai,👽 ChatGPT
   - DOMAIN-SUFFIX,chatgpt.com,👽 ChatGPT
   - DOMAIN-SUFFIX,openai.com,👽 ChatGPT
   - DOMAIN-SUFFIX,oaistatic.com,👽 ChatGPT
@@ -217,6 +235,15 @@ rules:
   - DOMAIN,workos.imgix.net,👽 ChatGPT
   - DOMAIN,o207216.ingest.sentry.io,👽 ChatGPT
   - DOMAIN,o33249.ingest.sentry.io,👽 ChatGPT
+
+  # OpenAI 官方相关共享依赖：允许其他站点使用这些域名时也误走 ChatGPT 机场，换取链路一致性。
+  - DOMAIN-SUFFIX,ct.sendgrid.net,👽 ChatGPT
+  - DOMAIN-SUFFIX,intercom.io,👽 ChatGPT
+  - DOMAIN-SUFFIX,intercomcdn.com,👽 ChatGPT
+  - DOMAIN,challenges.cloudflare.com,👽 ChatGPT
+  - DOMAIN,humb.apple.com,👽 ChatGPT
+  - DOMAIN,js.stripe.com,👽 ChatGPT
+  - DOMAIN,rum.browser-intake-datadoghq.com,👽 ChatGPT
 
   # Telegram
   - DOMAIN-SUFFIX,t.me,📲 电报信息
