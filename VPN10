@@ -149,13 +149,9 @@ proxy-groups:
 
   # ChatGPT 优先保持当前住宅出口，仅在当前节点失效时自动切换其他住宅节点。
   - name: "👽 ChatGPT"
-    type: fallback
+    type: select
     use:
       - "👽 ChatGPT机场"
-    url: https://chatgpt.com/cdn-cgi/trace
-    interval: 15
-    timeout: 2500
-    lazy: false
 
   - name: "♻️ 自动选择"
     type: url-test
