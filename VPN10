@@ -130,8 +130,8 @@ proxy-providers:
       additional-prefix: "[GPT] "
     health-check:
       enable: true
-      interval: 30
-      timeout: 5000
+      interval: 15
+      timeout: 2500
       lazy: false
       url: https://chatgpt.com/cdn-cgi/trace
       expected-status: 200
@@ -152,6 +152,10 @@ proxy-groups:
     type: fallback
     use:
       - "👽 ChatGPT机场"
+    url: https://chatgpt.com/cdn-cgi/trace
+    interval: 15
+    timeout: 2500
+    lazy: false
 
   - name: "♻️ 自动选择"
     type: url-test
