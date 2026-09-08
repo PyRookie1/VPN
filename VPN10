@@ -147,9 +147,19 @@ proxy-groups:
       - "✈️ 我的机场"
       - "👽 ChatGPT机场"
 
-  # ChatGPT：平时由 URLTest 自动选择；必要时可在 Clash Verge 中手动固定节点，
-  # 之后取消固定（📌）即可恢复自动选择。
+  # ChatGPT 总入口：
+  # 日常直接选择一个住宅节点以保持出口稳定；
+  # 需要自动择优时，手动选择“👽 ChatGPT 自动”。
   - name: "👽 ChatGPT"
+    type: select
+    proxies:
+      - "👽 ChatGPT 自动"
+    use:
+      - "👽 ChatGPT机场"
+
+  # ChatGPT 自动备用：
+  # 只有外层“👽 ChatGPT”选择本组时，才由 URLTest 自动择优。
+  - name: "👽 ChatGPT 自动"
     type: url-test
     use:
       - "👽 ChatGPT机场"
