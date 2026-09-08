@@ -130,10 +130,10 @@ proxy-providers:
       additional-prefix: "[GPT] "
     health-check:
       enable: true
-      interval: 15
+      interval: 10
       timeout: 2500
       lazy: false
-      url: https://chatgpt.com/cdn-cgi/trace
+      url: https://1.1.1.1/cdn-cgi/trace
       expected-status: 200
 
 proxy-groups:
@@ -147,11 +147,13 @@ proxy-groups:
       - "✈️ 我的机场"
       - "👽 ChatGPT机场"
 
-  # ChatGPT 优先保持当前住宅出口，仅在当前节点失效时自动切换其他住宅节点。
+  # ChatGPT：平时由 URLTest 自动选择；必要时可在 Clash Verge 中手动固定节点，
+  # 之后取消固定（📌）即可恢复自动选择。
   - name: "👽 ChatGPT"
-    type: select
+    type: url-test
     use:
       - "👽 ChatGPT机场"
+    tolerance: 100
 
   - name: "♻️ 自动选择"
     type: url-test
