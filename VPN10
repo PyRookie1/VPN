@@ -148,26 +148,10 @@ proxy-groups:
       - "👽 ChatGPT机场"
 
   # ChatGPT 总入口：
-  # 1) 想保持出口相对稳定并在故障时自动接管：选择“👽 ChatGPT 故障转移”；
-  # 2) 想持续按延迟自动择优：选择“👽 ChatGPT 自动”；
-  # 3) 想完全固定某个住宅节点：可直接选择 provider 中的具体节点。
   - name: "👽 ChatGPT"
     type: select
     proxies:
-      - "👽 ChatGPT 故障转移"
       - "👽 ChatGPT 自动"
-    use:
-      - "👽 ChatGPT机场"
-    url: https://chatgpt.com/cdn-cgi/trace
-    interval: 60
-    timeout: 5000
-    lazy: false
-    expected-status: 200
-
-  # ChatGPT 故障转移：
-  # 优先维持当前/前序可用节点，节点不可用时再切换，适合希望住宅出口更稳定的场景。
-  - name: "👽 ChatGPT 故障转移"
-    type: fallback
     use:
       - "👽 ChatGPT机场"
     url: https://chatgpt.com/cdn-cgi/trace
