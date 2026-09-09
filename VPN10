@@ -130,10 +130,10 @@ proxy-providers:
       additional-prefix: "[GPT] "
     health-check:
       enable: true
-      interval: 10
-      timeout: 2500
+      interval: 60
+      timeout: 5000
       lazy: false
-      url: https://1.1.1.1/cdn-cgi/trace
+      url: https://chatgpt.com/cdn-cgi/trace
       expected-status: 200
 
 proxy-groups:
@@ -148,21 +148,45 @@ proxy-groups:
       - "👽 ChatGPT机场"
 
   # ChatGPT 总入口：
-  # 日常直接选择一个住宅节点以保持出口稳定；
-  # 需要自动择优时，手动选择“👽 ChatGPT 自动”。
+  # 1) 想保持出口相对稳定并在故障时自动接管：选择“👽 ChatGPT 故障转移”；
+  # 2) 想持续按延迟自动择优：选择“👽 ChatGPT 自动”；
+  # 3) 想完全固定某个住宅节点：可直接选择 provider 中的具体节点。
   - name: "👽 ChatGPT"
     type: select
     proxies:
+      - "👽 ChatGPT 故障转移"
       - "👽 ChatGPT 自动"
     use:
       - "👽 ChatGPT机场"
+    url: https://chatgpt.com/cdn-cgi/trace
+    interval: 60
+    timeout: 5000
+    lazy: false
+    expected-status: 200
 
-  # ChatGPT 自动备用：
-  # 只有外层“👽 ChatGPT”选择本组时，才由 URLTest 自动择优。
+  # ChatGPT 故障转移：
+  # 优先维持当前/前序可用节点，节点不可用时再切换，适合希望住宅出口更稳定的场景。
+  - name: "👽 ChatGPT 故障转移"
+    type: fallback
+    use:
+      - "👽 ChatGPT机场"
+    url: https://chatgpt.com/cdn-cgi/trace
+    interval: 60
+    timeout: 5000
+    lazy: false
+    expected-status: 200
+
+  # ChatGPT 自动择优：
+  # 按测速结果自动选择延迟较低节点；tolerance=100 ms 用于减少频繁来回切换。
   - name: "👽 ChatGPT 自动"
     type: url-test
     use:
       - "👽 ChatGPT机场"
+    url: https://chatgpt.com/cdn-cgi/trace
+    interval: 60
+    timeout: 5000
+    lazy: false
+    expected-status: 200
     tolerance: 100
 
   - name: "♻️ 自动选择"
