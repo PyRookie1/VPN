@@ -14,7 +14,6 @@ profile:
   store-selected: true
   store-fake-ip: true
 
-# 域名嗅探：当应用自行解析 DNS 时，尽量从 HTTP/TLS/QUIC 恢复域名，避免 ChatGPT 流量落入普通兜底。
 sniffer:
   enable: true
   force-dns-mapping: true
@@ -28,7 +27,6 @@ sniffer:
     QUIC:
       ports: [443, 8443]
 
-# 必须在 Clash Verge 中实际开启 TUN/服务模式，并检查最终运行配置未被 GUI 覆盖。
 tun:
   enable: true
   stack: mixed
@@ -50,27 +48,22 @@ dns:
   respect-rules: true
   prefer-h3: false
 
-  # 只用于解析上游 DNS 的域名；使用加密协议，避免明文引导查询。
   default-nameserver:
     - tls://223.5.5.5
     - tls://223.6.6.6
 
-  # 代理节点域名以及 DIRECT 出口使用国内加密 DNS。
   proxy-server-nameserver: &domestic_dns
     - "https://dns.alidns.com/dns-query#DIRECT"
     - "https://doh.pub/dns-query#DIRECT"
   direct-nameserver: *domestic_dns
 
-  # 默认真实解析使用境外 DoH，并强制经过不含 DIRECT 的自动选择组。
   nameserver:
     - "https://1.1.1.1/dns-query#♻️ 自动选择"
     - "https://8.8.8.8/dns-query#♻️ 自动选择"
 
   nameserver-policy:
-    # 国内及私有域名使用国内加密 DNS。
     "geosite:cn,private": *domestic_dns
 
-    # ChatGPT / OpenAI：主域名、官方 geosite 与关键共享依赖统一使用 ChatGPT 住宅机场解析。
     "geosite:openai": &chatgpt_dns
       - "https://1.1.1.1/dns-query#👽 ChatGPT"
       - "https://8.8.8.8/dns-query#👽 ChatGPT"
@@ -106,7 +99,6 @@ dns:
     - time1.cloud.tencent.com
 
 proxy-providers:
-  # 通用订阅：与第二订阅共同供 ChatGPT 之外的策略组使用。
   "✈️ 我的机场":
     type: http
     url: "https://feed.iggv5.com/c/76c8d23a-f597-4f5a-a0c0-3bf2ccd93344/platform/clash/iGG-iGuge"
@@ -120,7 +112,6 @@ proxy-providers:
       url: https://www.gstatic.com/generate_204
       expected-status: 204
 
-  # 第二订阅：ChatGPT 只使用本订阅；本订阅也加入其他通用策略组。
   "👽 ChatGPT机场":
     type: http
     url: "https://ipequal.com/use/unsafe/sub.php?t=eyJ1dWlkIjoiNTZDQjcwQ0ItNTNCMS00NTY5LTkzQkMtNjBFREY2Q0QyQzcwIiwic2VydmVyIjoiMzguNTguNTcuMTQ4IiwicG9ydCI6IjQyODkyIiwicHVibGljX2tleSI6ImVJRzQwMmw5bFotLVJDdUM5aTVfUWJqYkJQdUU0dTk2bHdMNGF5dTRaU00iLCJzaG9ydF9pZCI6IjIwYWM0ZGEyMzc3YmQxYjUiLCJzZXJ2ZXJuYW1lIjoiZ2F0ZXdheS5pY2xvdWQuY29tIiwidG90YWwiOjE1MDMyMzg1NTM2MDAsImV4cGlyZSI6MTgxOTU0MTQ3M30&s=6fd4ed1cc40906023d8715132fc91a1c35023056813e79fd3b72510fc3d81634"
@@ -130,11 +121,21 @@ proxy-providers:
       additional-prefix: "[GPT] "
     health-check:
       enable: true
-      interval: 60
+      interval: 600
       timeout: 5000
-      lazy: false
+      lazy: true
       url: https://chatgpt.com/cdn-cgi/trace
       expected-status: 200
+
+rule-providers:
+  chatgpt_voice_ip:
+    type: http
+    behavior: classical
+    format: text
+    interval: 43200
+    url: "https://ruleset.skk.moe/Clash/ip/ai.txt"
+    path: ./sukkaw_ruleset/chatgpt_voice_ip.txt
+    proxy: "♻️ 自动选择"
 
 proxy-groups:
   - name: "🔰 节点选择"
@@ -145,39 +146,16 @@ proxy-groups:
       - "🎯 本地直连"
     use:
       - "✈️ 我的机场"
-      - "👽 ChatGPT机场"
 
-  # ChatGPT 总入口：
   - name: "👽 ChatGPT"
     type: select
-    proxies:
-      - "👽 ChatGPT 自动"
     use:
       - "👽 ChatGPT机场"
-    url: https://chatgpt.com/cdn-cgi/trace
-    interval: 60
-    timeout: 5000
-    lazy: false
-    expected-status: 200
-
-  # ChatGPT 自动择优：
-  # 按测速结果自动选择延迟较低节点；tolerance=100 ms 用于减少频繁来回切换。
-  - name: "👽 ChatGPT 自动"
-    type: url-test
-    use:
-      - "👽 ChatGPT机场"
-    url: https://chatgpt.com/cdn-cgi/trace
-    interval: 60
-    timeout: 5000
-    lazy: false
-    expected-status: 200
-    tolerance: 100
 
   - name: "♻️ 自动选择"
     type: url-test
     use:
       - "✈️ 我的机场"
-      - "👽 ChatGPT机场"
     url: https://www.gstatic.com/generate_204
     interval: 300
     tolerance: 50
@@ -187,7 +165,6 @@ proxy-groups:
     strategy: consistent-hashing
     use:
       - "✈️ 我的机场"
-      - "👽 ChatGPT机场"
 
   - name: "🌍 国外媒体"
     type: select
@@ -198,7 +175,6 @@ proxy-groups:
       - "🎯 本地直连"
     use:
       - "✈️ 我的机场"
-      - "👽 ChatGPT机场"
 
   - name: "🌏 国内媒体"
     type: select
@@ -214,7 +190,6 @@ proxy-groups:
       - "🎯 本地直连"
     use:
       - "✈️ 我的机场"
-      - "👽 ChatGPT机场"
 
   - name: "🎯 本地直连"
     type: select
@@ -237,10 +212,6 @@ rules:
   - IP-CIDR,172.16.0.0/12,🎯 本地直连,no-resolve
   - IP-CIDR,192.168.0.0/16,🎯 本地直连,no-resolve
   - IP-CIDR,100.64.0.0/10,🎯 本地直连,no-resolve
-  - IP-CIDR6,::1/128,🎯 本地直连,no-resolve
-  - IP-CIDR6,fc00::/7,🎯 本地直连,no-resolve
-  - IP-CIDR6,fe80::/10,🎯 本地直连,no-resolve
-  - IP-CIDR6,fd00::/8,🎯 本地直连,no-resolve
 
   # ChatGPT / OpenAI：优先保证整条链路使用 ChatGPT 住宅机场。
   - GEOSITE,openai,👽 ChatGPT
@@ -265,6 +236,9 @@ rules:
   - DOMAIN,js.stripe.com,👽 ChatGPT
   - DOMAIN,rum.browser-intake-datadoghq.com,👽 ChatGPT
 
+  # ChatGPT Voice
+  - AND,((RULE-SET,chatgpt_voice_ip),(NETWORK,UDP),(DST-PORT,3478)),👽 ChatGPT
+
   # Telegram
   - DOMAIN-SUFFIX,t.me,📲 电报信息
   - DOMAIN-SUFFIX,tdesktop.com,📲 电报信息
@@ -278,9 +252,6 @@ rules:
   - IP-CIDR,91.108.16.0/22,📲 电报信息,no-resolve
   - IP-CIDR,91.108.56.0/22,📲 电报信息,no-resolve
   - IP-CIDR,149.154.160.0/20,📲 电报信息,no-resolve
-  - IP-CIDR6,2001:b28:f23d::/48,📲 电报信息,no-resolve
-  - IP-CIDR6,2001:b28:f23f::/48,📲 电报信息,no-resolve
-  - IP-CIDR6,2001:67c:4e8::/48,📲 电报信息,no-resolve
 
   # Microsoft（并入国内媒体）
   - DOMAIN-KEYWORD,1drv,🌏 国内媒体
