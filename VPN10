@@ -156,6 +156,7 @@ proxy-groups:
     type: url-test
     use:
       - "✈️ 我的机场"
+      - "👽 ChatGPT机场"
     url: https://www.gstatic.com/generate_204
     interval: 300
     tolerance: 50
