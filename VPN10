@@ -146,7 +146,7 @@ proxy-groups:
       - "✈️ 我的机场"
 
   - name: "👽 ChatGPT"
-    type: url-test
+    type: select
     use:
       - "👽 ChatGPT机场"
     tolerance: 80
