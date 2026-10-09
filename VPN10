@@ -119,7 +119,7 @@ proxy-providers:
     path: ./wodejichang-chatgpt.yaml
     health-check:
       enable: true
-      interval: 60
+      interval: 15
       timeout: 3000
       lazy: false
       url: https://chatgpt.com/cdn-cgi/trace
