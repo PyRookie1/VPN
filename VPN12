@@ -87,8 +87,8 @@ proxies:
     name: "SOCKS5 23.230.206.126:5001"
     server: "23.230.206.126"
     port: 5001
-    username: "YOUR_SOCKS5_USERNAME"
-    password: "YOUR_SOCKS5_PASSWORD"
+    username: "fHz2nT96tGayan"
+    password: "no9pRddk"
     dialer-proxy: "♻️ 自动选择"
 
 proxy-providers:
