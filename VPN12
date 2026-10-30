@@ -1,1 +1,565 @@
+allow-lan: false
+bind-address: 127.0.0.1
+mixed-port: 7890
+mode: rule
+log-level: info
 
+external-controller: 127.0.0.1:9090
+
+ipv6: false
+unified-delay: true
+tcp-concurrent: true
+
+profile:
+  store-selected: true
+  store-fake-ip: true
+
+sniffer:
+  enable: true
+  force-dns-mapping: true
+  parse-pure-ip: true
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+    TLS:
+      ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
+
+tun:
+  enable: true
+  stack: mixed
+  auto-route: true
+  auto-detect-interface: true
+  strict-route: true
+  dns-hijack:
+    - any:53
+    - tcp://any:53
+
+dns:
+  enable: true
+  listen: 127.0.0.1:1053
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  use-hosts: true
+  use-system-hosts: true
+  respect-rules: true
+  prefer-h3: false
+
+  default-nameserver:
+    - tls://223.5.5.5
+    - tls://223.6.6.6
+
+  proxy-server-nameserver: &domestic_dns
+    - "https://dns.alidns.com/dns-query#DIRECT"
+    - "https://doh.pub/dns-query#DIRECT"
+  direct-nameserver: *domestic_dns
+
+  nameserver:
+    - "https://1.1.1.1/dns-query#♻️ 自动选择"
+    - "https://8.8.8.8/dns-query#♻️ 自动选择"
+
+  nameserver-policy:
+    # 中国大陆及本地私有域名：继续使用国内 DNS
+    "geosite:cn,private": *domestic_dns
+
+    # 海外 AI 专属域名：路由和 DNS 共享同一套白名单
+    "rule-set:overseas_ai":
+      - "https://1.1.1.1/dns-query#👽 AI专用"
+      - "https://8.8.8.8/dns-query#👽 AI专用"
+
+  fake-ip-filter:
+    - "*.lan"
+    - "*.local"
+    - localhost
+    - "+.msftconnecttest.com"
+    - "+.msftncsi.com"
+    - "time.*.com"
+    - "time.*.gov"
+    - "time.*.edu.cn"
+    - "ntp.*.com"
+    - time1.cloud.tencent.com
+
+proxies:
+  - type: socks5
+    name: "SOCKS5 23.230.206.126:5001"
+    server: "23.230.206.126"
+    port: 5001
+    username: "YOUR_SOCKS5_USERNAME"
+    password: "YOUR_SOCKS5_PASSWORD"
+    dialer-proxy: "♻️ 自动选择"
+
+proxy-providers:
+  "✈️ 我的机场":
+    type: http
+    url: "https://feed.iggv5.com/c/76c8d23a-f597-4f5a-a0c0-3bf2ccd93344/platform/clash/iGG-iGuge"
+    interval: 3600
+    path: ./wodejichang.yaml
+    health-check:
+      enable: true
+      interval: 300
+      timeout: 5000
+      lazy: false
+      url: https://www.gstatic.com/generate_204
+      expected-status: 204
+
+
+rule-providers:
+  # 海外 AI 专用白名单：不包含中国公司旗下 AI 的专属域名
+  overseas_ai:
+    type: inline
+    behavior: domain
+    payload:
+      # OpenAI / ChatGPT / Sora
+      - "+.openai.com"
+      - "+.chatgpt.com"
+      - "+.oaistatic.com"
+      - "+.oaiusercontent.com"
+      - "+.oaistatsig.com"
+      - "+.openaimerge.com"
+      - "+.sora.com"
+
+      # Anthropic / Claude
+      - "+.anthropic.com"
+      - "+.claude.ai"
+      - "+.claude.com"
+      - "+.claude.dev"
+      - "+.claudeusercontent.com"
+
+      # Google Gemini / AI Studio / NotebookLM
+      - "+.gemini.google.com"
+      - "+.aistudio.google.com"
+      - "+.ai.google.dev"
+      - "+.generativelanguage.googleapis.com"
+      - "+.geminiweb-pa.clients.google.com"
+      - "+.geminiweb-pa.clients6.google.com"
+      - "+.gemini.gstatic.com"
+      - "+.notebooklm.google.com"
+      - "+.notebooklm.googleapis.com"
+      - "+.notebooklm-pa.googleapis.com"
+
+      # Grok / Perplexity
+      - "+.grok.com"
+      - "+.x.ai"
+      - "+.grok.x.com"
+      - "+.perplexity.ai"
+      - "+.perplexity.com"
+      - "+.pplx.ai"
+
+      # Microsoft Copilot / GitHub Copilot
+      - "+.copilot.com"
+      - "+.copilot.microsoft.com"
+      - "+.copilot.cloud.microsoft"
+      - "+.githubcopilot.com"
+      - "copilot-proxy.githubusercontent.com"
+
+      # 其他 AI 助手 / AI 搜索
+      - "+.meta.ai"
+      - "+.mistral.ai"
+      - "+.poe.com"
+      - "+.poecdn.net"
+      - "+.duck.ai"
+
+      # AI 编程及应用开发
+      - "+.cursor.com"
+      - "+.cursor.sh"
+      - "+.cursorapi.com"
+      - "+.cursor-cdn.com"
+      - "+.windsurf.com"
+      - "+.codeium.com"
+      - "+.codeiumdata.com"
+      - "+.devin.ai"
+      - "+.replit.com"
+      - "+.lovable.dev"
+      - "+.bolt.new"
+
+      # 模型托管及推理 API
+      - "+.huggingface.co"
+      - "+.hf.space"
+      - "+.openrouter.ai"
+      - "+.groq.com"
+      - "+.cohere.com"
+      - "+.cohere.ai"
+      - "+.together.ai"
+      - "+.replicate.com"
+      - "+.fal.ai"
+      - "+.fireworks.ai"
+
+      # AI 图像与视频
+      - "+.midjourney.com"
+      - "+.runway.com"
+      - "+.runwayml.com"
+      - "+.lumalabs.ai"
+      - "+.pika.art"
+      - "+.ideogram.ai"
+      - "+.leonardo.ai"
+      - "+.stability.ai"
+      - "+.krea.ai"
+
+      # AI 语音及音乐
+      - "+.elevenlabs.io"
+      - "+.elevenlabs.com"
+      - "+.suno.com"
+      - "+.udio.com"
+
+
+proxy-groups:
+  - name: "🔰 节点选择"
+    type: select
+    proxies:
+      - "♻️ 自动选择"
+      - "⚖️ 负载均衡"
+      - "🎯 本地直连"
+    use:
+      - "✈️ 我的机场"
+
+  - name: "👽 AI专用"
+    type: select
+    proxies:
+      - "SOCKS5 23.230.206.126:5001"
+
+  - name: "♻️ 自动选择"
+    type: url-test
+    use:
+      - "✈️ 我的机场"
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 80
+
+  - name: "⚖️ 负载均衡"
+    type: load-balance
+    strategy: consistent-hashing
+    use:
+      - "✈️ 我的机场"
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+
+  - name: "🌍 国外媒体"
+    type: select
+    proxies:
+      - "🔰 节点选择"
+      - "♻️ 自动选择"
+      - "⚖️ 负载均衡"
+      - "🎯 本地直连"
+    use:
+      - "✈️ 我的机场"
+
+  - name: "🌏 国内媒体"
+    type: select
+    proxies:
+      - "🎯 本地直连"
+      - "🔰 节点选择"
+
+  - name: "📲 电报信息"
+    type: select
+    proxies:
+      - "🔰 节点选择"
+      - "♻️ 自动选择"
+      - "🎯 本地直连"
+    use:
+      - "✈️ 我的机场"
+
+  - name: "🎯 本地直连"
+    type: select
+    proxies:
+      - DIRECT
+
+  - name: "🐟 漏网之鱼"
+    type: select
+    proxies:
+      - "🔰 节点选择"
+      - "♻️ 自动选择"
+      - "⚖️ 负载均衡"
+      - "🎯 本地直连"
+
+rules:
+  # 局域网 / 本机
+  - DOMAIN-SUFFIX,local,🎯 本地直连
+  - IP-CIDR,127.0.0.0/8,🎯 本地直连,no-resolve
+  - IP-CIDR,10.0.0.0/8,🎯 本地直连,no-resolve
+  - IP-CIDR,172.16.0.0/12,🎯 本地直连,no-resolve
+  - IP-CIDR,192.168.0.0/16,🎯 本地直连,no-resolve
+  - IP-CIDR,100.64.0.0/10,🎯 本地直连,no-resolve
+
+  # 海外 AI 专用分流：优先于后续 Microsoft / Google / GitHub 等通用规则
+  - RULE-SET,overseas_ai,👽 AI专用
+
+  # Telegram
+  - DOMAIN-SUFFIX,t.me,📲 电报信息
+  - DOMAIN-SUFFIX,tdesktop.com,📲 电报信息
+  - DOMAIN-SUFFIX,telegra.ph,📲 电报信息
+  - DOMAIN-SUFFIX,telegram.me,📲 电报信息
+  - DOMAIN-SUFFIX,telegram.org,📲 电报信息
+  - DOMAIN-SUFFIX,telesco.pe,📲 电报信息
+  - IP-CIDR,91.108.4.0/22,📲 电报信息,no-resolve
+  - IP-CIDR,91.108.8.0/22,📲 电报信息,no-resolve
+  - IP-CIDR,91.108.12.0/22,📲 电报信息,no-resolve
+  - IP-CIDR,91.108.16.0/22,📲 电报信息,no-resolve
+  - IP-CIDR,91.108.56.0/22,📲 电报信息,no-resolve
+  - IP-CIDR,149.154.160.0/20,📲 电报信息,no-resolve
+
+  # Microsoft（并入国内媒体）
+  - DOMAIN-KEYWORD,1drv,🌏 国内媒体
+  - DOMAIN-KEYWORD,microsoft,🌏 国内媒体
+  - DOMAIN-SUFFIX,live.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,live.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,msn.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,outlook.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,hotmail.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,office.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,office.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,office365.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,onedrive.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,sharepoint.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,sharepointonline.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,windows.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,windows.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,windowsupdate.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,xboxlive.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,xboxservices.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,azure.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,azure.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,azureedge.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,msedge.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,msftauth.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,msftidentity.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,msauth.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,aka.ms,🌏 国内媒体
+
+  # Apple（并入国内媒体）
+  - DOMAIN-SUFFIX,aaplimg.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,apple.co,🌏 国内媒体
+  - DOMAIN-SUFFIX,apple.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,apple.com.cn,🌏 国内媒体
+  - DOMAIN-SUFFIX,apple-cloudkit.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,appstore.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,cdn-apple.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,icloud.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,icloud.com.cn,🌏 国内媒体
+  - DOMAIN-SUFFIX,icloud-content.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,me.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,mzstatic.com,🌏 国内媒体
+
+  # 国外媒体
+  - DOMAIN-SUFFIX,youtube.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,youtu.be,🌍 国外媒体
+  - DOMAIN-SUFFIX,ytimg.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,googlevideo.com,🌍 国外媒体
+  - DOMAIN,youtubei.googleapis.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,netflix.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,netflix.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,nflxvideo.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,nflximg.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,nflximg.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,disneyplus.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,disney-plus.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,dssott.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,hulu.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,huluim.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,hulustream.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,primevideo.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,amazonvideo.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,bamgrid.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,hbo.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,hbogo.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,hbonow.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,spotify.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,spotifycdn.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,scdn.co,🌍 国外媒体
+  - DOMAIN-SUFFIX,pscdn.co,🌍 国外媒体
+  - DOMAIN-SUFFIX,twitch.tv,🌍 国外媒体
+  - DOMAIN-SUFFIX,twitchcdn.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,ttvnw.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,discord.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,discordapp.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,discordapp.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,bahamut.com.tw,🌍 国外媒体
+  - DOMAIN-SUFFIX,gamer.com.tw,🌍 国外媒体
+  - DOMAIN-SUFFIX,abema.tv,🌍 国外媒体
+  - DOMAIN-SUFFIX,abema.io,🌍 国外媒体
+  - DOMAIN-SUFFIX,nicovideo.jp,🌍 国外媒体
+  - DOMAIN-SUFFIX,nimg.jp,🌍 国外媒体
+
+  # 国内媒体
+  - DOMAIN-SUFFIX,acg.tv,🌏 国内媒体
+  - DOMAIN-SUFFIX,acgvideo.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,b23.tv,🌏 国内媒体
+  - DOMAIN-SUFFIX,biliapi.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,biliapi.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,bilibili.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,biligame.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,biligame.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,bilivideo.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,hdslb.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,iqiyi.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,iqiyipic.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,qy.net,🌏 国内媒体
+  - DOMAIN-SUFFIX,iq.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,v.qq.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,video.qq.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,wetv.vip,🌏 国内媒体
+  - DOMAIN-SUFFIX,youku.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,ykimg.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,mgtv.com,🌏 国内媒体
+  - DOMAIN-SUFFIX,hitv.com,🌏 国内媒体
+
+  # Steam 下载/CDN优先直连，网页、社区等走代理
+  - DOMAIN-SUFFIX,steamserver.net,DIRECT
+  - DOMAIN-SUFFIX,steamcontent.com,DIRECT
+  - DOMAIN-SUFFIX,steamcdn-a.akamaihd.net,DIRECT
+  - DOMAIN,api.steampowered.com,🔰 节点选择
+  - DOMAIN,store.steampowered.com,🔰 节点选择
+  - DOMAIN-SUFFIX,steamcommunity.com,🔰 节点选择
+  - DOMAIN-SUFFIX,steam-chat.com,🔰 节点选择
+  - DOMAIN-SUFFIX,steamusercontent.com,🔰 节点选择
+  - DOMAIN-SUFFIX,steamstatic.com,🔰 节点选择
+  - DOMAIN-SUFFIX,steampowered.com,🔰 节点选择
+
+  # 常见需要代理的服务
+  - DOMAIN-KEYWORD,google,🔰 节点选择
+  - DOMAIN-KEYWORD,blogspot,🔰 节点选择
+  - DOMAIN-KEYWORD,github,🔰 节点选择
+  - DOMAIN-KEYWORD,twitter,🔰 节点选择
+  - DOMAIN-KEYWORD,facebook,🔰 节点选择
+  - DOMAIN-KEYWORD,pinterest,🔰 节点选择
+  - DOMAIN-SUFFIX,google.com,🔰 节点选择
+  - DOMAIN-SUFFIX,googleapis.com,🔰 节点选择
+  - DOMAIN-SUFFIX,gstatic.com,🔰 节点选择
+  - DOMAIN-SUFFIX,gmail.com,🔰 节点选择
+  - DOMAIN-SUFFIX,googleusercontent.com,🔰 节点选择
+  - DOMAIN-SUFFIX,googleapis.cn,🔰 节点选择
+  - DOMAIN-SUFFIX,recaptcha.net,🔰 节点选择
+  - DOMAIN-SUFFIX,gvt0.com,🔰 节点选择
+  - DOMAIN-SUFFIX,gvt1.com,🔰 节点选择
+  - DOMAIN-SUFFIX,gvt2.com,🔰 节点选择
+  - DOMAIN-SUFFIX,gvt3.com,🔰 节点选择
+  - DOMAIN-SUFFIX,github.com,🔰 节点选择
+  - DOMAIN-SUFFIX,githubassets.com,🔰 节点选择
+  - DOMAIN-SUFFIX,githubusercontent.com,🔰 节点选择
+  - DOMAIN-SUFFIX,github.io,🔰 节点选择
+  - DOMAIN-SUFFIX,x.com,🔰 节点选择
+  - DOMAIN-SUFFIX,twitter.com,🔰 节点选择
+  - DOMAIN-SUFFIX,twimg.com,🔰 节点选择
+  - DOMAIN-SUFFIX,t.co,🔰 节点选择
+  - DOMAIN-SUFFIX,facebook.com,🔰 节点选择
+  - DOMAIN-SUFFIX,fb.com,🔰 节点选择
+  - DOMAIN-SUFFIX,fbcdn.net,🔰 节点选择
+  - DOMAIN-SUFFIX,instagram.com,🔰 节点选择
+  - DOMAIN-SUFFIX,cdninstagram.com,🔰 节点选择
+  - DOMAIN-SUFFIX,whatsapp.com,🔰 节点选择
+  - DOMAIN-SUFFIX,whatsapp.net,🔰 节点选择
+  - DOMAIN-SUFFIX,reddit.com,🔰 节点选择
+  - DOMAIN-SUFFIX,redditmedia.com,🔰 节点选择
+  - DOMAIN-SUFFIX,redditstatic.com,🔰 节点选择
+  - DOMAIN-SUFFIX,wikipedia.org,🔰 节点选择
+  - DOMAIN-SUFFIX,wikimedia.org,🔰 节点选择
+  - DOMAIN-SUFFIX,medium.com,🔰 节点选择
+  - DOMAIN-SUFFIX,quora.com,🔰 节点选择
+  - DOMAIN-SUFFIX,archive.org,🔰 节点选择
+  - DOMAIN-SUFFIX,archive.is,🔰 节点选择
+  - DOMAIN-SUFFIX,cloudfront.net,🔰 节点选择
+  - DOMAIN-SUFFIX,amazonaws.com,🔰 节点选择
+  - DOMAIN-SUFFIX,dropbox.com,🔰 节点选择
+  - DOMAIN-SUFFIX,dropboxusercontent.com,🔰 节点选择
+  - DOMAIN-SUFFIX,mega.nz,🔰 节点选择
+  - DOMAIN-SUFFIX,box.com,🔰 节点选择
+  - DOMAIN-SUFFIX,zoom.us,🔰 节点选择
+  - DOMAIN-SUFFIX,signal.org,🔰 节点选择
+  - DOMAIN-SUFFIX,line.me,🔰 节点选择
+  - DOMAIN-SUFFIX,line-apps.com,🔰 节点选择
+  - DOMAIN-SUFFIX,line-scdn.net,🔰 节点选择
+  - DOMAIN-SUFFIX,naver.com,🔰 节点选择
+  - DOMAIN-SUFFIX,kakao.com,🔰 节点选择
+  - DOMAIN-SUFFIX,pixiv.net,🔰 节点选择
+
+  # 国内常见服务直连
+  - DOMAIN-SUFFIX,cn,🎯 本地直连
+  - DOMAIN-SUFFIX,baidu.com,🎯 本地直连
+  - DOMAIN-SUFFIX,bdstatic.com,🎯 本地直连
+  - DOMAIN-SUFFIX,qq.com,🎯 本地直连
+  - DOMAIN-SUFFIX,tencent.com,🎯 本地直连
+  - DOMAIN-SUFFIX,wechat.com,🎯 本地直连
+  - DOMAIN-SUFFIX,weixin.qq.com,🎯 本地直连
+  - DOMAIN-SUFFIX,gtimg.com,🎯 本地直连
+  - DOMAIN-SUFFIX,alicdn.com,🎯 本地直连
+  - DOMAIN-SUFFIX,alibaba.com,🎯 本地直连
+  - DOMAIN-SUFFIX,taobao.com,🎯 本地直连
+  - DOMAIN-SUFFIX,tmall.com,🎯 本地直连
+  - DOMAIN-SUFFIX,jd.com,🎯 本地直连
+  - DOMAIN-SUFFIX,360buyimg.com,🎯 本地直连
+  - DOMAIN-SUFFIX,163.com,🎯 本地直连
+  - DOMAIN-SUFFIX,126.net,🎯 本地直连
+  - DOMAIN-SUFFIX,netease.com,🎯 本地直连
+  - DOMAIN-SUFFIX,weibo.com,🎯 本地直连
+  - DOMAIN-SUFFIX,weibocdn.com,🎯 本地直连
+  - DOMAIN-SUFFIX,zhihu.com,🎯 本地直连
+  - DOMAIN-SUFFIX,zhimg.com,🎯 本地直连
+  - DOMAIN-SUFFIX,douban.com,🎯 本地直连
+  - DOMAIN-SUFFIX,doubanio.com,🎯 本地直连
+  - DOMAIN-SUFFIX,xiaomi.com,🎯 本地直连
+  - DOMAIN-SUFFIX,mi.com,🎯 本地直连
+  - DOMAIN-SUFFIX,hicloud.com,🎯 本地直连
+  - DOMAIN-SUFFIX,huawei.com,🎯 本地直连
+  - DOMAIN-SUFFIX,meituan.com,🎯 本地直连
+  - DOMAIN-SUFFIX,meituan.net,🎯 本地直连
+  - DOMAIN-SUFFIX,amap.com,🎯 本地直连
+  - DOMAIN-SUFFIX,autonavi.com,🎯 本地直连
+  - DOMAIN-SUFFIX,ctrip.com,🎯 本地直连
+  - DOMAIN-SUFFIX,qyer.com,🎯 本地直连
+  - DOMAIN-SUFFIX,smzdm.com,🎯 本地直连
+  - DOMAIN-SUFFIX,sspai.com,🎯 本地直连
+  - DOMAIN-SUFFIX,ithome.com,🎯 本地直连
+
+  # 手动添加的缓存 / 加速域名
+  - DOMAIN-SUFFIX,msftconnecttest.com,🎯 本地直连
+  - DOMAIN-SUFFIX,iggfastweb.com,🎯 本地直连
+  - DOMAIN-SUFFIX,igcaches.com,🎯 本地直连
+  - DOMAIN-SUFFIX,edgehelper.com,🎯 本地直连
+  - DOMAIN-SUFFIX,ifastcdncache.com,🎯 本地直连
+  - DOMAIN-SUFFIX,harmonyoscloudcdn.com,🎯 本地直连
+  - DOMAIN-SUFFIX,harmonyoscloudcache.com,🎯 本地直连
+  - DOMAIN-SUFFIX,harmonycloudcache.com,🎯 本地直连
+  - DOMAIN-SUFFIX,harmonycloudcdn.com,🎯 本地直连
+  - DOMAIN-SUFFIX,steamgamepowered.net,🎯 本地直连
+  - DOMAIN-SUFFIX,steamgamepowered.com,🎯 本地直连
+  - DOMAIN-SUFFIX,steamliveonline.com,🎯 本地直连
+  - DOMAIN-SUFFIX,steamliveonline.net,🎯 本地直连
+  - DOMAIN-SUFFIX,steamliveonline.org,🎯 本地直连
+  - DOMAIN-SUFFIX,netvigators.xyz,🎯 本地直连
+  - DOMAIN-SUFFIX,netvigatorscdn.com,🎯 本地直连
+  - DOMAIN-SUFFIX,netvigatorscdn.net,🎯 本地直连
+  - DOMAIN-SUFFIX,netvigatorscdn.xyz,🎯 本地直连
+  - DOMAIN-SUFFIX,huawei-static.com,🎯 本地直连
+  - DOMAIN-SUFFIX,bilibilivideoapi.com,🎯 本地直连
+  - DOMAIN-SUFFIX,bilibilivideoapi.net,🎯 本地直连
+  - DOMAIN-SUFFIX,hdslbbilibili.com,🎯 本地直连
+  - DOMAIN-SUFFIX,pubmed-hub.com,🎯 本地直连
+  - DOMAIN-SUFFIX,mssstatic.com,🎯 本地直连
+  - DOMAIN-SUFFIX,iggwebcache.com,🎯 本地直连
+  - DOMAIN-SUFFIX,cache100.xyz,🎯 本地直连
+  - DOMAIN-SUFFIX,malagame.xyz,🎯 本地直连
+  - DOMAIN-SUFFIX,malagame.com,🎯 本地直连
+  - DOMAIN-SUFFIX,malagame.net,🎯 本地直连
+  - DOMAIN-SUFFIX,kwaicdnkuaishou.com,🎯 本地直连
+  - DOMAIN-SUFFIX,71edgeiqiyi.com,🎯 本地直连
+  - DOMAIN-SUFFIX,hktserviceonline.com,🎯 本地直连
+  - DOMAIN-SUFFIX,workflowapis.net,🎯 本地直连
+  - DOMAIN-SUFFIX,onnets1.net,🎯 本地直连
+  - DOMAIN-SUFFIX,onnets1.com,🎯 本地直连
+  - DOMAIN-SUFFIX,onnets1.xyz,🎯 本地直连
+  - DOMAIN-SUFFIX,nttsoftgroup.com,🎯 本地直连
+  - DOMAIN-SUFFIX,macyscdn.net,🎯 本地直连
+  - DOMAIN-SUFFIX,macyscdn.com,🎯 本地直连
+  - DOMAIN-SUFFIX,inetvigator.net,🎯 本地直连
+  - DOMAIN-SUFFIX,virginatlanticgroup.net,🎯 本地直连
+  - DOMAIN-SUFFIX,istreamhouse.net,🎯 本地直连
+  - DOMAIN-SUFFIX,douyincdn.net,🎯 本地直连
+  - DOMAIN-SUFFIX,douyinlive.net,🎯 本地直连
+  - DOMAIN-SUFFIX,douyincache.com,🎯 本地直连
+  - DOMAIN-SUFFIX,onetcdn.com,🎯 本地直连
+
+  # 国内 IP 直连 / 兜底
+  - GEOIP,CN,🎯 本地直连
+  - MATCH,🐟 漏网之鱼
