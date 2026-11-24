@@ -84,11 +84,11 @@ dns:
 
 proxies:
   - type: socks5
-    name: "SOCKS5 23.230.206.126:5001"
-    server: "23.230.206.126"
+    name: "IPFLY"
+    server: "149.87.187.130"
     port: 5001
-    username: "fHz2nT96tGayan"
-    password: "no9pRddk"
+    username: "YRkAvafPlQ5Iss"
+    password: "5HR6sYYU"
     dialer-proxy: "♻️ 自动选择"
 
 proxy-providers:
@@ -334,14 +334,14 @@ proxy-groups:
       - "♻️ 自动选择"
       - "⚖️ 负载均衡"
       - "🎯 本地直连"
-      - "SOCKS5 23.230.206.126:5001"
+      - "IPFLY"
     use:
       - "✈️ 我的机场"
 
   - name: "👽 AI专用"
     type: select
     proxies:
-      - "SOCKS5 23.230.206.126:5001"
+      - "IPFLY"
 
   - name: "♻️ 自动选择"
     type: url-test
