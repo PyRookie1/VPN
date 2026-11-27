@@ -133,6 +133,7 @@ rule-providers:
 
       # Google Gemini / AI Studio / NotebookLM
       - "+.gemini.google.com"
+      - "+.one.google.com"
       - "+.aistudio.google.com"
       - "+.ai.google.dev"
       - "+.generativelanguage.googleapis.com"
