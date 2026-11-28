@@ -65,7 +65,7 @@ dns:
     # 中国大陆及本地私有域名：使用国内 DNS
     "geosite:cn,private": *domestic_dns
 
-    # 海外 AI 及 Google 核心域名：DNS 与代理统一走 AI 专用组
+    # 海外 AI 及 Google 核心域名：DNS 与代理严格锁死在 AI 专用组
     "rule-set:overseas_ai":
       - "https://1.1.1.1/dns-query#👽 AI专用"
       - "https://8.8.8.8/dns-query#👽 AI专用"
@@ -246,31 +246,11 @@ proxy-groups:
     use:
       - "✈️ 我的机场"
 
+  # 严格隔离：仅绑定 ChatGPT 机场，断连直接阻断，绝不回落主机场
   - name: "👽 AI专用"
     type: select
-    proxies:
-      - "🔄 AI自动容灾"
-      - "👽 AI主节点"
-      - "♻️ 自动选择"
     use:
       - "👽 ChatGPT机场"
-      - "✈️ 我的机场"
-
-  - name: "🔄 AI自动容灾"
-    type: fallback
-    proxies:
-      - "👽 AI主节点"
-      - "♻️ 自动选择"
-    url: https://www.gstatic.com/generate_204
-    interval: 180
-
-  - name: "👽 AI主节点"
-    type: url-test
-    use:
-      - "👽 ChatGPT机场"
-    url: https://www.gstatic.com/generate_204
-    interval: 300
-    tolerance: 80
 
   - name: "♻️ 自动选择"
     type: url-test
@@ -284,7 +264,6 @@ proxy-groups:
     type: select
     proxies:
       - "🔰 节点选择"
-      - "👽 AI专用"
       - "♻️ 自动选择"
       - "🎯 本地直连"
     use:
@@ -394,7 +373,7 @@ rules:
   - DOMAIN-SUFFIX,me.com,🌏 国内媒体
   - DOMAIN-SUFFIX,mzstatic.com,🌏 国内媒体
 
-  # 国外媒体（YouTube 优先匹配；若触发 Google 账号风控可将此组切换至 👽 AI专用）
+  # 国外媒体
   - DOMAIN-SUFFIX,youtube.com,🌍 国外媒体
   - DOMAIN-SUFFIX,youtu.be,🌍 国外媒体
   - DOMAIN-SUFFIX,ytimg.com,🌍 国外媒体
