@@ -58,15 +58,18 @@ dns:
   direct-nameserver: *domestic_dns
 
   nameserver:
-    - "https://1.1.1.1/dns-query#♻️ 自动选择"
-    - "https://8.8.8.8/dns-query#♻️ 自动选择"
+    - "https://1.1.1.1/dns-query#🔰 节点选择"
+    - "https://8.8.8.8/dns-query#🔰 节点选择"
 
   nameserver-policy:
-    # 中国大陆及本地私有域名：继续使用国内 DNS
+    # 中国大陆及本地私有域名：使用国内 DNS
     "geosite:cn,private": *domestic_dns
 
-    # 海外 AI 专属域名：路由和 DNS 共享同一套白名单
+    # 海外 AI 及 Google 核心域名：DNS 与代理统一走 AI 专用组
     "rule-set:overseas_ai":
+      - "https://1.1.1.1/dns-query#👽 AI专用"
+      - "https://8.8.8.8/dns-query#👽 AI专用"
+    "geosite:google":
       - "https://1.1.1.1/dns-query#👽 AI专用"
       - "https://8.8.8.8/dns-query#👽 AI专用"
 
@@ -85,7 +88,7 @@ dns:
 proxy-providers:
   "✈️ 我的机场":
     type: http
-    url: "https://feed.iggv5.com/c/76c8d23a-f597-4f5a-a0c0-3bf2ccd93344/platform/clash/iGG-iGuge"
+    url: "<请替换为重置后的主机场订阅链接>"
     interval: 3600
     path: ./wodejichang.yaml
     health-check:
@@ -98,19 +101,19 @@ proxy-providers:
 
   "👽 ChatGPT机场":
     type: http
-    url: "https://ipequal.com/use/unsafe/sub.php?t=eyJ1dWlkIjoiNTZDQjcwQ0ItNTNCMS00NTY5LTkzQkMtNjBFREY2Q0QyQzcwIiwic2VydmVyIjoiMzguNTguNTcuMTQ4IiwicG9ydCI6IjQyODkyIiwicHVibGljX2tleSI6ImVJRzQwMmw5bFotLVJDdUM5aTVfUWJqYkJQdUU0dTk2bHdMNGF5dTRaU00iLCJzaG9ydF9pZCI6IjIwYWM0ZGEyMzc3YmQxYjUiLCJzZXJ2ZXJuYW1lIjoid3d3LmhhcnZhcmQuZWR1IiwidG90YWwiOjE5NzU2ODQ5NTYxNjAsImV4cGlyZSI6MTgyMDE0NjI3M30&s=76086d98c3bba3ef74a96dc72ce8bd0461053253973327e276a505e3eade8511"
+    url: "<请替换为重置后的AI机场订阅链接>"
     interval: 3600
     path: ./wodejichang-chatgpt.yaml
     health-check:
       enable: true
       interval: 300
       timeout: 5000
-      lazy: true
+      lazy: false
       url: https://www.gstatic.com/generate_204
       expected-status: 204
 
 rule-providers:
-  # 海外 AI 专用白名单：不包含中国公司旗下 AI 的专属域名
+  # 海外 AI 专用白名单
   overseas_ai:
     type: inline
     behavior: domain
@@ -131,18 +134,34 @@ rule-providers:
       - "+.claude.dev"
       - "+.claudeusercontent.com"
 
-      # Google Gemini / AI Studio / NotebookLM
+      # Google Gemini / AI Studio / NotebookLM / DeepMind / Labs
       - "+.gemini.google.com"
+      - "+.gemini.google"
+      - "+.bard.google.com"
       - "+.one.google.com"
       - "+.aistudio.google.com"
+      - "+.makersuite.google.com"
       - "+.ai.google.dev"
+      - "+.generativeai.google"
       - "+.generativelanguage.googleapis.com"
+      - "+.alkalimakersuite-pa.clients6.google.com"
       - "+.geminiweb-pa.clients.google.com"
       - "+.geminiweb-pa.clients6.google.com"
+      - "+.proactivebackend-pa.googleapis.com"
+      - "+.geller-pa.googleapis.com"
+      - "+.waa-pa.clients6.google.com"
+      - "+.jnn-pa.googleapis.com"
+      - "+.signaler-pa.googleapis.com"
+      - "+.aisandbox-pa.googleapis.com"
       - "+.gemini.gstatic.com"
       - "+.notebooklm.google.com"
       - "+.notebooklm.googleapis.com"
       - "+.notebooklm-pa.googleapis.com"
+      - "+.deepmind.com"
+      - "+.deepmind.google"
+      - "+.labs.google"
+      - "+.jules.google.com"
+      - "+.opal.google"
 
       # Grok / Perplexity
       - "+.grok.com"
@@ -208,7 +227,7 @@ rule-providers:
       - "+.suno.com"
       - "+.udio.com"
 
-  # ChatGPT Voice 特殊 IP 规则，不扩展为所有 AI 的 UDP 规则
+  # ChatGPT Voice 特殊 IP 规则
   chatgpt_voice_ip:
     type: http
     behavior: classical
@@ -223,15 +242,35 @@ proxy-groups:
     type: select
     proxies:
       - "♻️ 自动选择"
-      - "⚖️ 负载均衡"
       - "🎯 本地直连"
     use:
       - "✈️ 我的机场"
 
   - name: "👽 AI专用"
     type: select
+    proxies:
+      - "🔄 AI自动容灾"
+      - "👽 AI主节点"
+      - "♻️ 自动选择"
     use:
       - "👽 ChatGPT机场"
+      - "✈️ 我的机场"
+
+  - name: "🔄 AI自动容灾"
+    type: fallback
+    proxies:
+      - "👽 AI主节点"
+      - "♻️ 自动选择"
+    url: https://www.gstatic.com/generate_204
+    interval: 180
+
+  - name: "👽 AI主节点"
+    type: url-test
+    use:
+      - "👽 ChatGPT机场"
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 80
 
   - name: "♻️ 自动选择"
     type: url-test
@@ -241,20 +280,12 @@ proxy-groups:
     interval: 300
     tolerance: 80
 
-  - name: "⚖️ 负载均衡"
-    type: load-balance
-    strategy: consistent-hashing
-    use:
-      - "✈️ 我的机场"
-    url: https://www.gstatic.com/generate_204
-    interval: 300
-
   - name: "🌍 国外媒体"
     type: select
     proxies:
       - "🔰 节点选择"
+      - "👽 AI专用"
       - "♻️ 自动选择"
-      - "⚖️ 负载均衡"
       - "🎯 本地直连"
     use:
       - "✈️ 我的机场"
@@ -284,7 +315,6 @@ proxy-groups:
     proxies:
       - "🔰 节点选择"
       - "♻️ 自动选择"
-      - "⚖️ 负载均衡"
       - "🎯 本地直连"
 
 rules:
@@ -296,7 +326,13 @@ rules:
   - IP-CIDR,192.168.0.0/16,🎯 本地直连,no-resolve
   - IP-CIDR,100.64.0.0/10,🎯 本地直连,no-resolve
 
-  # 海外 AI 专用分流：优先于后续 Microsoft / Google / GitHub 等通用规则
+  # 阻断 AI / Google / YouTube 的 QUIC (UDP 443)，强制回退 TCP 提升稳定性
+  - AND,((RULE-SET,overseas_ai),(NETWORK,UDP),(DST-PORT,443)),REJECT
+  - AND,((DOMAIN-SUFFIX,google.com),(NETWORK,UDP),(DST-PORT,443)),REJECT
+  - AND,((DOMAIN-SUFFIX,googleapis.com),(NETWORK,UDP),(DST-PORT,443)),REJECT
+  - AND,((DOMAIN-SUFFIX,googlevideo.com),(NETWORK,UDP),(DST-PORT,443)),REJECT
+
+  # 海外 AI 专用分流
   - RULE-SET,overseas_ai,👽 AI专用
 
   # ChatGPT Voice：仅匹配上游清单的 UDP 3478 流量
@@ -358,7 +394,7 @@ rules:
   - DOMAIN-SUFFIX,me.com,🌏 国内媒体
   - DOMAIN-SUFFIX,mzstatic.com,🌏 国内媒体
 
-  # 国外媒体
+  # 国外媒体（YouTube 优先匹配；若触发 Google 账号风控可将此组切换至 👽 AI专用）
   - DOMAIN-SUFFIX,youtube.com,🌍 国外媒体
   - DOMAIN-SUFFIX,youtu.be,🌍 国外媒体
   - DOMAIN-SUFFIX,ytimg.com,🌍 国外媒体
@@ -398,6 +434,20 @@ rules:
   - DOMAIN-SUFFIX,nicovideo.jp,🌍 国外媒体
   - DOMAIN-SUFFIX,nimg.jp,🌍 国外媒体
 
+  # Google 全系核心服务（统一归入 👽 AI专用，消除与 Gemini 的跨出口 IP 分裂）
+  - DOMAIN-KEYWORD,google,👽 AI专用
+  - DOMAIN-SUFFIX,google.com,👽 AI专用
+  - DOMAIN-SUFFIX,googleapis.com,👽 AI专用
+  - DOMAIN-SUFFIX,gstatic.com,👽 AI专用
+  - DOMAIN-SUFFIX,gmail.com,👽 AI专用
+  - DOMAIN-SUFFIX,googleusercontent.com,👽 AI专用
+  - DOMAIN-SUFFIX,googleapis.cn,👽 AI专用
+  - DOMAIN-SUFFIX,recaptcha.net,👽 AI专用
+  - DOMAIN-SUFFIX,gvt0.com,👽 AI专用
+  - DOMAIN-SUFFIX,gvt1.com,👽 AI专用
+  - DOMAIN-SUFFIX,gvt2.com,👽 AI专用
+  - DOMAIN-SUFFIX,gvt3.com,👽 AI专用
+
   # 国内媒体
   - DOMAIN-SUFFIX,acg.tv,🌏 国内媒体
   - DOMAIN-SUFFIX,acgvideo.com,🌏 国内媒体
@@ -421,7 +471,7 @@ rules:
   - DOMAIN-SUFFIX,mgtv.com,🌏 国内媒体
   - DOMAIN-SUFFIX,hitv.com,🌏 国内媒体
 
-  # Steam 下载/CDN优先直连，网页、社区等走代理
+  # Steam 下载/CDN 优先直连，网页、社区等走代理
   - DOMAIN-SUFFIX,steamserver.net,DIRECT
   - DOMAIN-SUFFIX,steamcontent.com,DIRECT
   - DOMAIN-SUFFIX,steamcdn-a.akamaihd.net,DIRECT
@@ -433,24 +483,12 @@ rules:
   - DOMAIN-SUFFIX,steamstatic.com,🔰 节点选择
   - DOMAIN-SUFFIX,steampowered.com,🔰 节点选择
 
-  # 常见需要代理的服务
-  - DOMAIN-KEYWORD,google,🔰 节点选择
+  # 其他常见需要代理的服务
   - DOMAIN-KEYWORD,blogspot,🔰 节点选择
   - DOMAIN-KEYWORD,github,🔰 节点选择
   - DOMAIN-KEYWORD,twitter,🔰 节点选择
   - DOMAIN-KEYWORD,facebook,🔰 节点选择
   - DOMAIN-KEYWORD,pinterest,🔰 节点选择
-  - DOMAIN-SUFFIX,google.com,🔰 节点选择
-  - DOMAIN-SUFFIX,googleapis.com,🔰 节点选择
-  - DOMAIN-SUFFIX,gstatic.com,🔰 节点选择
-  - DOMAIN-SUFFIX,gmail.com,🔰 节点选择
-  - DOMAIN-SUFFIX,googleusercontent.com,🔰 节点选择
-  - DOMAIN-SUFFIX,googleapis.cn,🔰 节点选择
-  - DOMAIN-SUFFIX,recaptcha.net,🔰 节点选择
-  - DOMAIN-SUFFIX,gvt0.com,🔰 节点选择
-  - DOMAIN-SUFFIX,gvt1.com,🔰 节点选择
-  - DOMAIN-SUFFIX,gvt2.com,🔰 节点选择
-  - DOMAIN-SUFFIX,gvt3.com,🔰 节点选择
   - DOMAIN-SUFFIX,github.com,🔰 节点选择
   - DOMAIN-SUFFIX,githubassets.com,🔰 节点选择
   - DOMAIN-SUFFIX,githubusercontent.com,🔰 节点选择
